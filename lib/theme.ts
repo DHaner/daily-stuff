@@ -1,5 +1,5 @@
 import { DarkTheme, DefaultTheme, type Theme } from 'expo-router/react-navigation';
- 
+
 export const THEME = {
   light: {
     background: 'hsl(0 0% 100%)',
@@ -54,7 +54,7 @@ export const THEME = {
     chart5: 'hsl(340 75% 55%)',
   },
 };
- 
+
 export const NAV_THEME: Record<'light' | 'dark', Theme> = {
   light: {
     ...DefaultTheme,
@@ -79,3 +79,31 @@ export const NAV_THEME: Record<'light' | 'dark', Theme> = {
     },
   },
 };
+/**
+ * Hex mirror of the theme, for third-party views that cannot read Tailwind classes
+ * (react-native-calendars, react-native-chart-kit).
+ */
+export const PALETTE = {
+  light: {
+    background: '#ffffff',
+    card: '#ffffff',
+    foreground: '#0a0a0a',
+    muted: '#f5f5f5',
+    mutedForeground: '#737373',
+    border: '#e5e5e5',
+    primary: '#171717',
+    primaryForeground: '#fafafa',
+    destructive: '#ef4444',
+  },
+  dark: {
+    background: '#0a0a0a',
+    card: '#171717',
+    foreground: '#fafafa',
+    muted: '#262626',
+    mutedForeground: '#a3a3a3',
+    border: '#2a2a2a',
+    primary: '#ebebeb',
+    primaryForeground: '#171717',
+    destructive: '#f87171',
+  },
+} as const;
