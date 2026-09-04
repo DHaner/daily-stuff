@@ -1,4 +1,4 @@
-import { DatePickerDialog } from '@/components/expenses/date-picker-dialog';
+import { DatePicker } from '@/components/expenses/date-picker';
 import { ExpenseCard } from '@/components/expenses/expense-card';
 import { ExpensesDoughnut } from '@/components/expenses/expenses-doughnut';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -8,12 +8,12 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useDaysWithExpenses, useExpensesByDay } from '@/hooks/use-expenses';
 import { getCategoryBreakdown, sumExpenses } from '@/lib/breakdown';
-import { todayKey } from '@/lib/date';
+import { shiftDayKey, todayKey } from '@/lib/date';
 import { formatCurrency } from '@/lib/format';
 import type { Expense } from '@/lib/schemas/expense';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
-import { InboxIcon, PlusIcon } from 'lucide-react-native';
+import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, PlusIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -30,6 +30,7 @@ export default function HomeScreen() {
 
   const expensesQuery = useExpensesByDay(day);
   const daysQuery = useDaysWithExpenses();
+  const isCurrentDayToday = day === todayKey();
 
   const expenses = expensesQuery.data ?? [];
   const total = React.useMemo(() => sumExpenses(expenses), [expenses]);
@@ -67,7 +68,31 @@ export default function HomeScreen() {
         }
         ListHeaderComponent={
           <View className="mb-4 gap-4">
-            <DatePickerDialog value={day} onChange={setDay} markedDays={daysQuery.data ?? []} />
+            <View className="flex-row items-center justify-between gap-2 w-full">
+              <Button
+                variant="outline"
+                size="icon"
+                accessibilityLabel="Día anterior"
+                onPress={() => setDay((current) => shiftDayKey(current, -1))}>
+                <Icon as={ChevronLeftIcon} className="size-5" />
+              </Button>
+
+              <View className="flex-1">
+                <DatePicker value={day} onChange={setDay} markedDays={daysQuery.data ?? []} />
+              </View>
+
+              {isCurrentDayToday ? (
+                <View className="size-10 sm:size-9" />
+              ) : (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  accessibilityLabel="Día siguiente"
+                  onPress={() => setDay((current) => shiftDayKey(current, 1))}>
+                  <Icon as={ChevronRightIcon} className="size-5" />
+                </Button>
+              )}
+            </View>
 
             <Card className="items-center py-6">
               {expensesQuery.isPending ? (
@@ -93,7 +118,7 @@ export default function HomeScreen() {
             <View className="items-center gap-3 px-6 py-12">
               <Icon as={InboxIcon} className="text-muted-foreground size-10" />
               <Text className="text-muted-foreground text-center">
-                Sin gastos registrados este día.{'\n'}Toca el botón + para agregar el primero.
+                Sin gastos registrados este día.
               </Text>
             </View>
           )

@@ -72,7 +72,7 @@ con `node_modules` y falla el autolinking en tiempo de ejecución.
 | Key-value | `@react-native-async-storage/async-storage` | Tema y caché de queries; API asíncrona |
 | Listas | `@shopify/flash-list` | v2, no necesita `estimatedItemSize` |
 | Gráfica | `react-native-chart-kit` + `react-native-svg` | `PieChart` con agujero simulado |
-| Calendario | `react-native-calendars` | Locale `es` configurado en `date-picker-dialog.tsx` |
+| Calendario | `react-native-calendars` | Locale `es` configurado en `date-picker.tsx` |
 | Iconos | `lucide-react-native` | Siempre vía `<Icon as={XIcon} />` |
 | Gestos | `react-native-gesture-handler` | `GestureHandlerRootView` en el layout raíz |
 

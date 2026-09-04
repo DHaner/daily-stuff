@@ -1,4 +1,9 @@
-import { emptyFormValues, ExpenseForm } from '@/components/expenses/expense-form';
+import {
+  emptyFormValues,
+  ExpenseForm,
+  type ExpenseFormHandle,
+} from '@/components/expenses/expense-form';
+import { Button } from '@/components/ui/button';
 import { Text } from '@/components/ui/text';
 import { useCreateExpense, useDaysWithExpenses } from '@/hooks/use-expenses';
 import { dayKeySchema } from '@/lib/schemas/expense';
@@ -12,20 +17,34 @@ export default function NewExpenseScreen() {
   const params = useLocalSearchParams<{ date?: string }>();
   const createExpense = useCreateExpense();
   const daysQuery = useDaysWithExpenses();
+  const formRef = React.useRef<ExpenseFormHandle>(null);
 
   // The home screen passes the day currently being viewed so the modal opens on it.
   const initialDate = dayKeySchema.safeParse(params.date).data ?? todayKey();
   const defaultValues = React.useMemo(() => emptyFormValues(initialDate), [initialDate]);
 
+  const headerRight = React.useCallback(
+    () => (
+      <Button
+        disabled={createExpense.isPending}
+        accessibilityLabel="Guardar gasto"
+        onPress={() => formRef.current?.submit()}>
+        <Text className="font-semibold">Guardar</Text>
+      </Button>
+    ),
+    [createExpense.isPending]
+  );
+
   return (
     <KeyboardAvoidingView
       className="bg-background flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ title: 'Nuevo gasto' }} />
+      <Stack.Screen options={{ title: 'Nuevo gasto', headerRight }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled">
         <ExpenseForm
+          ref={formRef}
           defaultValues={defaultValues}
           submitLabel="Guardar gasto"
           isSubmitting={createExpense.isPending}

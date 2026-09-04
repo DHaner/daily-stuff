@@ -1,5 +1,5 @@
 import { CategoryPicker } from '@/components/expenses/category-picker';
-import { DatePickerDialog } from '@/components/expenses/date-picker-dialog';
+import { DatePicker } from '@/components/expenses/date-picker';
 import { FormField } from '@/components/expenses/form-field';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,7 +10,13 @@ import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
 import { DEFAULT_CATEGORY } from '@/lib/categories';
 import { todayKey, type DayKey } from '@/lib/date';
-import { formatCurrency, parseAmountInput, toAmountInput } from '@/lib/format';
+import {
+  formatAmountInput,
+  formatCurrency,
+  parseAmountInput,
+  sanitizeAmountInput,
+  toAmountInput,
+} from '@/lib/format';
 import {
   expenseFormSchema,
   type Expense,
@@ -64,22 +70,28 @@ type ExpenseFormProps = {
   footer?: React.ReactNode;
 };
 
-export function ExpenseForm({
-  defaultValues,
-  submitLabel,
-  isSubmitting = false,
-  onSubmit,
-  markedDays,
-  footer,
-}: ExpenseFormProps) {
-  const form = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
-    resolver: zodResolver(expenseFormSchema),
-    defaultValues,
-    mode: 'onTouched',
-  });
+/** Lets a parent screen (e.g. a header button) trigger the same submit as the in-form button. */
+export type ExpenseFormHandle = {
+  submit: () => void;
+};
 
-  const { control, handleSubmit, setValue, formState } = form;
-  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+export const ExpenseForm = React.forwardRef<ExpenseFormHandle, ExpenseFormProps>(
+  function ExpenseForm(
+    { defaultValues, submitLabel, isSubmitting = false, onSubmit, markedDays, footer },
+    ref
+  ) {
+    const form = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
+      resolver: zodResolver(expenseFormSchema),
+      defaultValues,
+      mode: 'onTouched',
+    });
+
+    const { control, handleSubmit, setValue, formState } = form;
+    const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+
+    React.useImperativeHandle(ref, () => ({
+      submit: () => handleSubmit(onSubmit)(),
+    }));
 
   const items = useWatch({ control, name: 'items' });
   const isComposed = fields.length > 0;
@@ -113,11 +125,7 @@ export function ExpenseForm({
         name="date"
         render={({ field }) => (
           <FormField label="Fecha" error={formState.errors.date?.message}>
-            <DatePickerDialog
-              value={field.value}
-              onChange={field.onChange}
-              markedDays={markedDays}
-            />
+            <DatePicker value={field.value} onChange={field.onChange} markedDays={markedDays} />
           </FormField>
         )}
       />
@@ -147,13 +155,33 @@ export function ExpenseForm({
             hint={isComposed ? 'Suma de los sub-gastos' : undefined}
             error={formState.errors.total?.message}>
             <Input
-              placeholder="0.00"
+              placeholder="$0.00"
               keyboardType="decimal-pad"
+              value={formatAmountInput(field.value)}
+              onChangeText={(text) => field.onChange(sanitizeAmountInput(text))}
+              onBlur={() => {
+                field.onBlur();
+                if (field.value) {
+                  field.onChange(toAmountInput(parseAmountInput(field.value)));
+                }
+              }}
+              editable={!isComposed}
+              className={isComposed ? 'opacity-70' : undefined}
+            />
+          </FormField>
+        )}
+      />
+      
+      <Controller
+        control={control}
+        name="description"
+        render={({ field }) => (
+          <FormField label="Descripción" error={formState.errors.description?.message}>
+            <Textarea
+              placeholder="Notas, método de pago, etc."
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}
-              editable={!isComposed}
-              className={isComposed ? 'opacity-70' : undefined}
             />
           </FormField>
         )}
@@ -169,20 +197,7 @@ export function ExpenseForm({
         )}
       />
 
-      <Controller
-        control={control}
-        name="description"
-        render={({ field }) => (
-          <FormField label="Descripción" error={formState.errors.description?.message}>
-            <Textarea
-              placeholder="Notas, método de pago, etc."
-              value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-            />
-          </FormField>
-        )}
-      />
+
 
       <Separator />
 
@@ -292,5 +307,6 @@ export function ExpenseForm({
 
       {footer}
     </View>
-  );
-}
+    );
+  }
+);
