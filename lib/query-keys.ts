@@ -5,4 +5,5 @@ export const queryKeys = {
   expensesByDay: (day: DayKey) => ['expenses', 'day', day] as const,
   expense: (id: string) => ['expenses', 'detail', id] as const,
   daysWithExpenses: ['expenses', 'days'] as const,
+  incomes: ['incomes'] as const,
 };

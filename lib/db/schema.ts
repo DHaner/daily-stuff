@@ -2,7 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DATABASE_NAME = 'finanzas.db';
 
-const DATABASE_VERSION = 1;
+const DATABASE_VERSION = 2;
 
 /**
  * Runs on `SQLiteProvider.onInit`. Migrations are keyed on SQLite's `user_version`
@@ -47,6 +47,36 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
       CREATE INDEX IF NOT EXISTS idx_expense_items_expense_id ON expense_items (expense_id);
     `);
     currentVersion = 1;
+  }
+
+  if (currentVersion === 1) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS incomes (
+        id TEXT PRIMARY KEY NOT NULL,
+        concept TEXT NOT NULL,
+        total REAL NOT NULL DEFAULT 0,
+        description TEXT NOT NULL DEFAULT '',
+        category_id TEXT NOT NULL DEFAULT 'otros',
+        date TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS income_items (
+        id TEXT PRIMARY KEY NOT NULL,
+        income_id TEXT NOT NULL,
+        concept TEXT NOT NULL,
+        amount REAL NOT NULL DEFAULT 0,
+        description TEXT NOT NULL DEFAULT '',
+        category_id TEXT NOT NULL DEFAULT 'otros',
+        position INTEGER NOT NULL DEFAULT 0,
+        FOREIGN KEY (income_id) REFERENCES incomes (id) ON DELETE CASCADE
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_incomes_date ON incomes (date);
+      CREATE INDEX IF NOT EXISTS idx_income_items_income_id ON income_items (income_id);
+    `);
+    currentVersion = 2;
   }
 
   await db.execAsync(`PRAGMA user_version = ${currentVersion}`);

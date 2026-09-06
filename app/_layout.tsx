@@ -5,6 +5,7 @@ import { DATABASE_NAME, migrateDbIfNeeded } from '@/lib/db/schema';
 import { NAV_THEME } from '@/lib/theme';
 import { applyStoredThemePreference } from '@/lib/theme-preference';
 import { PortalHost } from '@rn-primitives/portal';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import * as SplashScreen from 'expo-splash-screen';
 import { Stack } from 'expo-router';
@@ -54,16 +55,14 @@ function RootLayoutNav() {
           client={queryClient}
           persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE }}>
           <ThemeProvider value={NAV_THEME[theme ?? 'light']}>
-            <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
-            <Stack>
-              <Stack.Screen name="index" options={{ title: 'Finanzas' }} />
-              <Stack.Screen
-                name="expense/new"
-                options={{ presentation: 'modal', title: 'Nuevo gasto' }}
-              />
-              <Stack.Screen name="expense/[id]" options={{ title: 'Detalle del gasto' }} />
-            </Stack>
-            <PortalHost />
+            <BottomSheetModalProvider>
+              <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
+              <Stack>
+                <Stack.Screen name="index" options={{ title: 'Finanzas' }} />
+                <Stack.Screen name="expense/[id]" options={{ title: 'Detalle del gasto' }} />
+              </Stack>
+              <PortalHost />
+            </BottomSheetModalProvider>
           </ThemeProvider>
         </PersistQueryClientProvider>
       </SQLiteProvider>

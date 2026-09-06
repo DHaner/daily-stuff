@@ -1,6 +1,7 @@
 import { DatePicker } from '@/components/expenses/date-picker';
 import { ExpenseCard } from '@/components/expenses/expense-card';
 import { ExpensesDoughnut } from '@/components/expenses/expenses-doughnut';
+import { QuickAddSheet, type QuickAddSheetHandle } from '@/components/expenses/quick-add-sheet';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -16,6 +17,12 @@ import { Stack, useRouter } from 'expo-router';
 import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, PlusIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, RefreshControl, View } from 'react-native';
+import Animated, {
+  Extrapolation,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+} from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const SCREEN_OPTIONS = {
@@ -27,6 +34,8 @@ export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [day, setDay] = React.useState(todayKey);
+  const quickAddRef = React.useRef<QuickAddSheetHandle>(null);
+  const animatedIndex = useSharedValue(-1);
 
   const expensesQuery = useExpensesByDay(day);
   const daysQuery = useDaysWithExpenses();
@@ -45,6 +54,12 @@ export default function HomeScreen() {
     ),
     [router]
   );
+
+  const fabAnimatedStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: interpolate(animatedIndex.value, [-1, 0], [0, 160], Extrapolation.CLAMP) },
+    ],
+  }));
 
   return (
     <View className="bg-background flex-1">
@@ -125,18 +140,20 @@ export default function HomeScreen() {
         }
       />
 
-      <View
+      <Animated.View
         className="absolute right-5"
-        style={{ bottom: insets.bottom + 24 }}
+        style={[{ bottom: insets.bottom + 24 }, fabAnimatedStyle]}
         pointerEvents="box-none">
         <Button
           size="icon"
           className="size-16 rounded-full shadow-lg shadow-black/25"
           accessibilityLabel="Agregar nuevo gasto"
-          onPress={() => router.push({ pathname: '/expense/new', params: { date: day } })}>
+          onPress={() => quickAddRef.current?.present(day)}>
           <Icon as={PlusIcon} className="size-7" />
         </Button>
-      </View>
+      </Animated.View>
+
+      <QuickAddSheet ref={quickAddRef} animatedIndex={animatedIndex} />
     </View>
   );
 }
