@@ -87,6 +87,29 @@ export async function listDaysWithIncomes(db: SQLiteDatabase): Promise<string[]>
   return rows.map((row) => row.date);
 }
 
+export async function listIncomesByCategory(
+  db: SQLiteDatabase,
+  categoryId: string
+): Promise<Income[]> {
+  const rows = await db.getAllAsync<IncomeRow>(
+    'SELECT * FROM incomes WHERE category_id = ? ORDER BY date DESC, created_at DESC',
+    categoryId
+  );
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const placeholders = rows.map(() => '?').join(', ');
+  const itemRows = await db.getAllAsync<IncomeItemRow>(
+    `SELECT * FROM income_items WHERE income_id IN (${placeholders}) ORDER BY position ASC`,
+    ...rows.map((row) => row.id)
+  );
+  const itemsByIncome = groupItemsByIncome(itemRows);
+
+  return rows.map((row) => toIncome(row, itemsByIncome[row.id] ?? []));
+}
+
 export async function getIncomeById(db: SQLiteDatabase, id: string): Promise<Income | null> {
   const row = await db.getFirstAsync<IncomeRow>('SELECT * FROM incomes WHERE id = ?', id);
 

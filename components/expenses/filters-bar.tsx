@@ -14,7 +14,7 @@ import { EXPENSE_CATEGORY_LIST, INCOME_CATEGORY_LIST, getCategory } from '@/lib/
 import type { Period } from '@/lib/date';
 import type { CategoryFilter, TypeFilter } from '@/lib/transactions';
 import { cn } from '@/lib/utils';
-import { ArrowDownCircleIcon, ArrowUpCircleIcon, TagIcon } from 'lucide-react-native';
+import { ArrowDownCircleIcon, ArrowUpCircleIcon, LayersIcon, TagIcon } from 'lucide-react-native';
 import { ScrollView, View } from 'react-native';
 
 const PERIOD_OPTIONS: { value: Period; label: string }[] = [
@@ -59,6 +59,8 @@ type TypeCategoryFiltersProps = {
   onTypeChange: (type: TypeFilter) => void;
   categoryId: CategoryFilter;
   onCategoryChange: (categoryId: CategoryFilter) => void;
+  groupByCategory: boolean;
+  onGroupByCategoryChange: (grouped: boolean) => void;
 };
 
 export function TypeCategoryFilters({
@@ -66,6 +68,8 @@ export function TypeCategoryFilters({
   onTypeChange,
   categoryId,
   onCategoryChange,
+  groupByCategory,
+  onGroupByCategoryChange,
 }: TypeCategoryFiltersProps) {
   function handleTypeChange(nextType: TypeFilter) {
     onTypeChange(nextType);
@@ -147,6 +151,18 @@ export function TypeCategoryFilters({
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <Button
+        variant={groupByCategory ? 'default' : 'outline'}
+        size="icon"
+        accessibilityLabel="Agrupar por categoría"
+        accessibilityState={{ selected: groupByCategory }}
+        onPress={() => onGroupByCategoryChange(!groupByCategory)}>
+        <Icon
+          as={LayersIcon}
+          className={cn('size-4', groupByCategory ? 'text-primary-foreground' : 'text-muted-foreground')}
+        />
+      </Button>
     </View>
   );
 }

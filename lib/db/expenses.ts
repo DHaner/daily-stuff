@@ -98,6 +98,29 @@ export async function listExpensesByDateRange(
   return rows.map((row) => toExpense(row, itemsByExpense[row.id] ?? []));
 }
 
+export async function listExpensesByCategory(
+  db: SQLiteDatabase,
+  categoryId: string
+): Promise<Expense[]> {
+  const rows = await db.getAllAsync<ExpenseRow>(
+    'SELECT * FROM expenses WHERE category_id = ? ORDER BY date DESC, created_at DESC',
+    categoryId
+  );
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const placeholders = rows.map(() => '?').join(', ');
+  const itemRows = await db.getAllAsync<ExpenseItemRow>(
+    `SELECT * FROM expense_items WHERE expense_id IN (${placeholders}) ORDER BY position ASC`,
+    ...rows.map((row) => row.id)
+  );
+  const itemsByExpense = groupItemsByExpense(itemRows);
+
+  return rows.map((row) => toExpense(row, itemsByExpense[row.id] ?? []));
+}
+
 export async function getExpenseById(db: SQLiteDatabase, id: string): Promise<Expense | null> {
   const row = await db.getFirstAsync<ExpenseRow>('SELECT * FROM expenses WHERE id = ?', id);
 

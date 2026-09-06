@@ -1,6 +1,6 @@
 import { Text } from '@/components/ui/text';
 import type { CategorySlice } from '@/lib/breakdown';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrencyCompact } from '@/lib/format';
 import { cn } from '@/lib/utils';
 import * as React from 'react';
 import { useWindowDimensions, View } from 'react-native';
@@ -34,13 +34,13 @@ export function ExpensesDoughnut({ slices, total, className }: ExpensesDoughnutP
   const width = Math.max(windowWidth - HORIZONTAL_PADDING * 2, 240);
   const outerRadius = CHART_HEIGHT / 2.5;
   const holeRadius = outerRadius * 0.64;
-  const hasData = slices.length > 0 && total > 0;
+  const hasData = slices.some((slice) => slice.percentage > 0);
 
   const data = React.useMemo(
     () =>
       slices.map((slice) => ({
         name: slice.label,
-        amount: slice.amount,
+        percentage: slice.percentage,
         color: slice.color,
         legendFontColor: '#000000',
         legendFontSize: 12,
@@ -56,13 +56,12 @@ export function ExpensesDoughnut({ slices, total, className }: ExpensesDoughnutP
             data={data}
             width={width}
             height={CHART_HEIGHT}
-            accessor="amount"
+            accessor="percentage"
             backgroundColor="transparent"
             // Shifts the pie centre from width/4 to width/2.
             paddingLeft={String(width / 4)}
             hasLegend={false}
             chartConfig={CHART_CONFIG}
-            absolute
           />
         ) : (
           <View
@@ -85,12 +84,8 @@ export function ExpensesDoughnut({ slices, total, className }: ExpensesDoughnutP
             left: width / 2 - holeRadius,
             top: CHART_HEIGHT / 2 - holeRadius,
           }}>
-          <Text className="text-muted-foreground text-xs tracking-wide uppercase">Total</Text>
-          <Text className="text-foreground text-2xl font-bold" numberOfLines={1}>
-            {formatCurrency(total)}
-          </Text>
-          <Text className="text-muted-foreground text-xs">
-            {slices.length === 1 ? '1 categoría' : `${slices.length} categorías`}
+          <Text className="text-foreground text-2xl font-bold" numberOfLines={1} adjustsFontSizeToFit>
+            {formatCurrencyCompact(total)}
           </Text>
         </View>
       </View>
@@ -100,7 +95,7 @@ export function ExpensesDoughnut({ slices, total, className }: ExpensesDoughnutP
           <View key={slice.categoryId} className="flex-row items-center gap-2">
             <View className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: slice.color }} />
             <Text className="text-muted-foreground text-xs">
-              {slice.label} · {formatCurrency(slice.amount)} ({Math.round(slice.percentage)}%)
+              {slice.label} · {formatCurrencyCompact(slice.amount)} ({Math.round(slice.percentage)}%)
             </Text>
           </View>
         ))}

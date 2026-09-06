@@ -66,7 +66,7 @@ function capitalize(text: string) {
  * button doesn't jump around) as months with 5 vs. 6 week-rows, or week/month/year
  * lists of varying length, are shown.
  */
-const PICKER_HEIGHT = 350;
+const PICKER_HEIGHT = 360;
 
 type DatePickerProps = {
   value: DayKey;
@@ -165,7 +165,7 @@ export function DatePicker({ value, onChange, markedDays = [], period = 'dia' }:
           onNext={() => setCursor((current) => addMonths(current, 1))}
         />
 
-        <View className="gap-2">
+        <View className="gap-2 items-center">
           {weekStarts.map((weekStart) => {
             const start = toDayKey(weekStart);
             const { end } = getPeriodRange(start, 'semana');
@@ -175,7 +175,7 @@ export function DatePicker({ value, onChange, markedDays = [], period = 'dia' }:
               <Button
                 key={start}
                 variant={isSelected ? 'default' : 'outline'}
-                className="w-full justify-between"
+                className="justify-between"
                 onPress={() => commit(start)}>
                 <Text className={cn(isSelected && 'text-primary-foreground')}>
                   {formatPeriodLabel(start, 'semana')}
@@ -204,7 +204,7 @@ export function DatePicker({ value, onChange, markedDays = [], period = 'dia' }:
           onNext={() => setCursor((current) => addYears(current, 1))}
         />
 
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-2 justify-center">
           {Array.from({ length: 12 }, (_, monthIndex) => {
             const monthDate = new Date(year, monthIndex, 1);
             const dayKey = toDayKey(monthDate);
@@ -243,7 +243,7 @@ export function DatePicker({ value, onChange, markedDays = [], period = 'dia' }:
           onNext={() => setCursor((current) => addYears(current, 12))}
         />
 
-        <View className="flex-row flex-wrap gap-2">
+        <View className="flex-row flex-wrap gap-2 justify-center">
           {years.map((year) => {
             const dayKey = toDayKey(new Date(year, 0, 1));
             const { start, end } = getPeriodRange(dayKey, 'anio');
@@ -272,9 +272,9 @@ export function DatePicker({ value, onChange, markedDays = [], period = 'dia' }:
       <Button
         variant="outline"
         size="lg"
-        className="w-full justify-between gap-3"
+        className="w-full justify-center gap-3"
         onPress={() => setOpen(true)}>
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center justify-center gap-2">
           <Icon as={CalendarIcon} className="size-5" />
           <Text className="font-semibold capitalize">
             {period === 'dia' ? formatDayCompact(value) : formatPeriodLabel(value, period)}

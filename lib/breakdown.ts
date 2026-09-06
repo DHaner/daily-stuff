@@ -1,5 +1,6 @@
 import { getCategory, type CategoryId } from '@/lib/categories';
 import type { Expense, ExpenseItem } from '@/lib/schemas/expense';
+import type { Transaction } from '@/lib/transactions';
 
 export type CategorySlice = {
   categoryId: CategoryId;
@@ -21,13 +22,58 @@ export function sumExpenses(expenses: Pick<Expense, 'total'>[]) {
 }
 
 /**
+ * Splits transactions by type (income/expense) for the doughnut chart.
+ * Used when typeFilter is 'todos': green for income, red for expenses.
+ */
+export function getTypeBreakdown(transactions: Transaction[]): CategorySlice[] {
+  let incomeTotal = 0;
+  let expenseTotal = 0;
+
+  for (const transaction of transactions) {
+    const amount = Number.isFinite(transaction.total) ? transaction.total : 0;
+    if (amount <= 0) continue;
+
+    if (transaction.kind === 'ingreso') {
+      incomeTotal += amount;
+    } else {
+      expenseTotal += amount;
+    }
+  }
+
+  const grandTotal = incomeTotal + expenseTotal;
+  const slices: CategorySlice[] = [];
+
+  if (incomeTotal > 0) {
+    slices.push({
+      categoryId: 'salario' as CategoryId,
+      label: 'Ingresos',
+      color: '#22c55e',
+      amount: incomeTotal,
+      percentage: grandTotal > 0 ? (incomeTotal / grandTotal) * 100 : 0,
+    });
+  }
+
+  if (expenseTotal > 0) {
+    slices.push({
+      categoryId: 'otros' as CategoryId,
+      label: 'Gastos',
+      color: '#ef4444',
+      amount: expenseTotal,
+      percentage: grandTotal > 0 ? (expenseTotal / grandTotal) * 100 : 0,
+    });
+  }
+
+  return slices;
+}
+
+/**
  * Splits a day's spending into category slices for the doughnut chart.
  *
  * A composed expense (e.g. one Amazon order with three products) is broken down by
  * its items' own categories; whatever the items don't cover — shipping, taxes,
  * rounding — falls back to the parent expense's category.
  */
-export function getCategoryBreakdown(expenses: Expense[]): CategorySlice[] {
+export function getCategoryBreakdown(expenses: (Expense | Transaction)[]): CategorySlice[] {
   const totals = new Map<CategoryId, number>();
 
   function add(categoryId: string, amount: number) {

@@ -36,6 +36,37 @@ export function filterTransactions(
   });
 }
 
+export type CategoryTotal = {
+  categoryId: CategoryId;
+  kind: TransactionKind;
+  total: number;
+  count: number;
+};
+
+/** Collapses transactions into one row per category, summing their totals. */
+export function groupTransactionsByCategory(transactions: Transaction[]): CategoryTotal[] {
+  const totals = new Map<CategoryId, CategoryTotal>();
+
+  for (const transaction of transactions) {
+    const amount = Number.isFinite(transaction.total) ? transaction.total : 0;
+    const existing = totals.get(transaction.categoryId);
+
+    if (existing) {
+      existing.total += amount;
+      existing.count += 1;
+    } else {
+      totals.set(transaction.categoryId, {
+        categoryId: transaction.categoryId,
+        kind: transaction.kind,
+        total: amount,
+        count: 1,
+      });
+    }
+  }
+
+  return [...totals.values()].sort((a, b) => b.total - a.total);
+}
+
 /** Ingresos - gastos for the given transactions (positive means net income). */
 export function sumNet(transactions: Transaction[]): number {
   return transactions.reduce((total, transaction) => {

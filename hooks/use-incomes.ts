@@ -3,6 +3,7 @@ import {
   deleteIncome,
   getIncomeById,
   listDaysWithIncomes,
+  listIncomesByCategory,
   listIncomesByDateRange,
   updateIncome,
 } from '@/lib/db/incomes';
@@ -18,6 +19,16 @@ export function useIncomesByRange(start: DayKey, end: DayKey, options?: { enable
   return useQuery({
     queryKey: queryKeys.incomesByRange(start, end),
     queryFn: () => listIncomesByDateRange(db, start, end),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useIncomesByCategory(categoryId: string, options?: { enabled?: boolean }) {
+  const db = useSQLiteContext();
+
+  return useQuery({
+    queryKey: queryKeys.incomesByCategory(categoryId),
+    queryFn: () => listIncomesByCategory(db, categoryId),
     enabled: options?.enabled ?? true,
   });
 }

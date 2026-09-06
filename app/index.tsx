@@ -2,7 +2,7 @@ import { DatePicker } from '@/components/expenses/date-picker';
 import { ExpensesDoughnut } from '@/components/expenses/expenses-doughnut';
 import { PeriodTabs, TypeCategoryFilters } from '@/components/expenses/filters-bar';
 import { QuickAddSheet, type QuickAddSheetHandle } from '@/components/expenses/quick-add-sheet';
-import { TransactionCard } from '@/components/expenses/transaction-card';
+import { CategorySummaryCard, TransactionCard } from '@/components/expenses/transaction-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,10 +10,27 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useDaysWithExpenses, useExpensesByRange } from '@/hooks/use-expenses';
 import { useDaysWithIncomes, useIncomesByRange } from '@/hooks/use-incomes';
-import { getCategoryBreakdown, sumExpenses } from '@/lib/breakdown';
-import { getPeriodRange, shiftPeriod, todayKey, type Period } from '@/lib/date';
+import { getCategoryBreakdown, getTypeBreakdown, sumExpenses } from '@/lib/breakdown';
+import {
+  formatDayLabel,
+  getPeriodRange,
+  isCurrentPeriod,
+  shiftPeriod,
+  todayKey,
+  type DayKey,
+  type Period,
+} from '@/lib/date';
 import { formatCurrency } from '@/lib/format';
-import { filterTransactions, mergeTransactions, sumNet, type CategoryFilter, type Transaction, type TypeFilter } from '@/lib/transactions';
+import {
+  filterTransactions,
+  groupTransactionsByCategory,
+  mergeTransactions,
+  sumNet,
+  type CategoryFilter,
+  type CategoryTotal,
+  type Transaction,
+  type TypeFilter,
+} from '@/lib/transactions';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
 import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, PlusIcon } from 'lucide-react-native';
@@ -39,6 +56,11 @@ const PERIOD_NOUN: Record<Period, string> = {
   anio: 'año',
 };
 
+type ListRow =
+  | { type: 'header'; date: DayKey }
+  | { type: 'transaction'; transaction: Transaction }
+  | { type: 'category'; categoryTotal: CategoryTotal };
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
@@ -46,6 +68,7 @@ export default function HomeScreen() {
   const [period, setPeriod] = React.useState<Period>('dia');
   const [typeFilter, setTypeFilter] = React.useState<TypeFilter>('todos');
   const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>('todas');
+  const [groupByCategory, setGroupByCategory] = React.useState(false);
   const quickAddRef = React.useRef<QuickAddSheetHandle>(null);
   const animatedIndex = useSharedValue(-1);
 
@@ -59,7 +82,7 @@ export default function HomeScreen() {
   });
   const daysWithExpensesQuery = useDaysWithExpenses();
   const daysWithIncomesQuery = useDaysWithIncomes();
-  const isCurrentDayToday = day === todayKey();
+  const isCurrentPeriodSelected = isCurrentPeriod(day, period);
 
   const markedDays = React.useMemo(
     () => [...new Set([...(daysWithExpensesQuery.data ?? []), ...(daysWithIncomesQuery.data ?? [])])],
@@ -85,21 +108,77 @@ export default function HomeScreen() {
     if (typeFilter === 'gasto') return sumExpenses(filtered);
     return sumNet(filtered);
   }, [filtered, typeFilter]);
-  const slices = React.useMemo(() => getCategoryBreakdown(filtered), [filtered]);
+  const slices = React.useMemo(() => {
+    if (typeFilter === 'todos') {
+      return getTypeBreakdown(filtered);
+    }
+    return getCategoryBreakdown(filtered);
+  }, [filtered, typeFilter]);
+
+  const rows = React.useMemo<ListRow[]>(() => {
+    if (groupByCategory) {
+      return groupTransactionsByCategory(filtered).map((categoryTotal) => ({
+        type: 'category',
+        categoryTotal,
+      }));
+    }
+
+    if (period === 'dia') {
+      return filtered.map((transaction) => ({ type: 'transaction', transaction }));
+    }
+
+    const result: ListRow[] = [];
+    let lastDate: DayKey | null = null;
+
+    for (const transaction of filtered) {
+      if (transaction.date !== lastDate) {
+        result.push({ type: 'header', date: transaction.date });
+        lastDate = transaction.date;
+      }
+      result.push({ type: 'transaction', transaction });
+    }
+
+    return result;
+  }, [filtered, period, groupByCategory]);
 
   const renderItem = React.useCallback(
-    ({ item }: { item: Transaction }) => (
-      <TransactionCard
-        transaction={item}
-        onPress={() =>
-          router.push(
-            item.kind === 'gasto'
-              ? { pathname: '/expense/[id]', params: { id: item.id } }
-              : { pathname: '/income/[id]', params: { id: item.id } }
-          )
-        }
-      />
-    ),
+    ({ item }: { item: ListRow }) => {
+      if (item.type === 'header') {
+        return (
+          <Text className="text-muted-foreground mb-2 text-sm font-semibold capitalize">
+            {formatDayLabel(item.date)}
+          </Text>
+        );
+      }
+
+      if (item.type === 'category') {
+        return (
+          <CategorySummaryCard
+            categoryTotal={item.categoryTotal}
+            onPress={() =>
+              router.push({
+                pathname: '/category/[id]',
+                params: { id: item.categoryTotal.categoryId },
+              })
+            }
+          />
+        );
+      }
+
+      const transaction = item.transaction;
+      return (
+        <TransactionCard
+          transaction={transaction}
+          onPress={() =>
+            router.push(
+              transaction.kind === 'gasto'
+                ? { pathname: '/expense/[id]', params: { id: transaction.id } }
+                : { pathname: '/income/[id]', params: { id: transaction.id } }
+            )
+          }
+        />
+      );
+    },
     [router]
   );
 
@@ -114,8 +193,13 @@ export default function HomeScreen() {
       <Stack.Screen options={SCREEN_OPTIONS} />
 
       <FlashList
-        data={filtered}
-        keyExtractor={(item) => `${item.kind}-${item.id}`}
+        data={rows}
+        keyExtractor={(row) => {
+          if (row.type === 'header') return `header-${row.date}`;
+          if (row.type === 'category') return `category-${row.categoryTotal.categoryId}`;
+          return `${row.transaction.kind}-${row.transaction.id}`;
+        }}
+        getItemType={(row) => row.type}
         renderItem={renderItem}
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -147,7 +231,7 @@ export default function HomeScreen() {
                 <DatePicker value={day} onChange={setDay} markedDays={markedDays} period={period} />
               </View>
 
-              {isCurrentDayToday && period === 'dia' ? (
+              {isCurrentPeriodSelected ? (
                 <View className="size-10 sm:size-9" />
               ) : (
                 <Button
@@ -177,6 +261,8 @@ export default function HomeScreen() {
               onTypeChange={setTypeFilter}
               categoryId={categoryFilter}
               onCategoryChange={setCategoryFilter}
+              groupByCategory={groupByCategory}
+              onGroupByCategoryChange={setGroupByCategory}
             />
           </View>
         }

@@ -59,6 +59,13 @@ export function getPeriodRange(day: DayKey, period: Period): DateRange {
   }
 }
 
+/** Whether `day` falls within the current (today-containing) instance of `period`. */
+export function isCurrentPeriod(day: DayKey, period: Period): boolean {
+  const range = getPeriodRange(day, period);
+  const todayRange = getPeriodRange(todayKey(), period);
+  return range.start === todayRange.start && range.end === todayRange.end;
+}
+
 /** Moves `day` forward/back by one whole period (e.g. `amount: 1` on `'mes'` goes to next month). */
 export function shiftPeriod(day: DayKey, period: Period, amount: number): DayKey {
   const date = fromDayKey(day);

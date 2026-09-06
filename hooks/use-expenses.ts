@@ -3,6 +3,7 @@ import {
   deleteExpense,
   getExpenseById,
   listDaysWithExpenses,
+  listExpensesByCategory,
   listExpensesByDate,
   listExpensesByDateRange,
   updateExpense,
@@ -28,6 +29,16 @@ export function useExpensesByRange(start: DayKey, end: DayKey, options?: { enabl
   return useQuery({
     queryKey: queryKeys.expensesByRange(start, end),
     queryFn: () => listExpensesByDateRange(db, start, end),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useExpensesByCategory(categoryId: string, options?: { enabled?: boolean }) {
+  const db = useSQLiteContext();
+
+  return useQuery({
+    queryKey: queryKeys.expensesByCategory(categoryId),
+    queryFn: () => listExpensesByCategory(db, categoryId),
     enabled: options?.enabled ?? true,
   });
 }
