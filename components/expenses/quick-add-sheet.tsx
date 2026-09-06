@@ -27,7 +27,7 @@ import {
   BottomSheetView,
   type BottomSheetBackdropProps,
 } from '@gorhom/bottom-sheet';
-import { ArrowDownCircleIcon, ArrowUpCircleIcon, ChevronUp } from 'lucide-react-native';
+import { ArrowDownCircleIcon, ArrowUpCircleIcon, ChevronUp, Minus, Plus } from 'lucide-react-native';
 import * as React from 'react';
 import { Keyboard, Platform, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
@@ -191,14 +191,18 @@ export const QuickAddSheet = React.forwardRef<QuickAddSheetHandle, QuickAddSheet
           </DropdownMenu>
         </View>
 
-        <View className="flex-row items-center gap-2">
+        <View className="flex-row items-center ">
+          <Icon as={type === 'gasto' ? Minus : Plus} strokeWidth={3}
+            className={type === 'gasto' ? 'text-destructive size-5' : 'size-5 text-green-600'}
+          />
+          <Text className='font-bold text-3xl pl-2'>$</Text>
           <BottomSheetTextInput
             ref={amountRef}
             className="flex-1"
             value={formatAmountInput(amount)}
             onChangeText={(text) => setAmount(sanitizeAmountInput(text))}
             onFocus={closeMenus}
-            placeholder="$0.00"
+            placeholder="0.00"
             keyboardType="decimal-pad"
             returnKeyType="next"
             onSubmitEditing={() => conceptRef.current?.focus()}
@@ -222,14 +226,13 @@ export const QuickAddSheet = React.forwardRef<QuickAddSheetHandle, QuickAddSheet
           value={concept}
           onChangeText={setConcept}
           onFocus={closeMenus}
-          placeholder="Concepto (opcional)"
+          placeholder="Concepto"
           autoCapitalize="sentences"
           returnKeyType="done"
           onSubmitEditing={() => Keyboard.dismiss()}
           style={{
             fontSize: 16,
             color: theme === 'dark' ? '#fafafa' : '#0a0a0a',
-            paddingVertical: 8,
           }}
         />
       </BottomSheetView>

@@ -48,7 +48,7 @@ export function formatAmountInput(raw: string): string {
   const digits = intPart.replace(/^0+(?=\d)/, '') || '0';
   const grouped = digits.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
-  if (raw.endsWith('.')) return `$${grouped}.`;
-  if (decPart !== undefined) return `$${grouped}.${decPart}`;
-  return `$${grouped}`;
+  if (raw.endsWith('.')) return `${grouped}.`;
+  if (decPart !== undefined) return `${grouped}.${decPart}`;
+  return `${grouped}`;
 }
