@@ -1,17 +1,19 @@
 import { DatePicker } from '@/components/expenses/date-picker';
-import { ExpenseCard } from '@/components/expenses/expense-card';
 import { ExpensesDoughnut } from '@/components/expenses/expenses-doughnut';
+import { PeriodTabs, TypeCategoryFilters } from '@/components/expenses/filters-bar';
 import { QuickAddSheet, type QuickAddSheetHandle } from '@/components/expenses/quick-add-sheet';
+import { TransactionCard } from '@/components/expenses/transaction-card';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useDaysWithExpenses, useExpensesByDay } from '@/hooks/use-expenses';
+import { useDaysWithExpenses, useExpensesByRange } from '@/hooks/use-expenses';
+import { useDaysWithIncomes, useIncomesByRange } from '@/hooks/use-incomes';
 import { getCategoryBreakdown, sumExpenses } from '@/lib/breakdown';
-import { shiftDayKey, todayKey } from '@/lib/date';
+import { getPeriodRange, shiftPeriod, todayKey, type Period } from '@/lib/date';
 import { formatCurrency } from '@/lib/format';
-import type { Expense } from '@/lib/schemas/expense';
+import { filterTransactions, mergeTransactions, sumNet, type CategoryFilter, type Transaction, type TypeFilter } from '@/lib/transactions';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
 import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, PlusIcon } from 'lucide-react-native';
@@ -30,26 +32,72 @@ const SCREEN_OPTIONS = {
   headerRight: () => <ThemeToggle />,
 };
 
+const PERIOD_NOUN: Record<Period, string> = {
+  dia: 'día',
+  semana: 'semana',
+  mes: 'mes',
+  anio: 'año',
+};
+
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [day, setDay] = React.useState(todayKey);
+  const [period, setPeriod] = React.useState<Period>('dia');
+  const [typeFilter, setTypeFilter] = React.useState<TypeFilter>('todos');
+  const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>('todas');
   const quickAddRef = React.useRef<QuickAddSheetHandle>(null);
   const animatedIndex = useSharedValue(-1);
 
-  const expensesQuery = useExpensesByDay(day);
-  const daysQuery = useDaysWithExpenses();
+  const range = React.useMemo(() => getPeriodRange(day, period), [day, period]);
+
+  const expensesQuery = useExpensesByRange(range.start, range.end, {
+    enabled: typeFilter !== 'ingreso',
+  });
+  const incomesQuery = useIncomesByRange(range.start, range.end, {
+    enabled: typeFilter !== 'gasto',
+  });
+  const daysWithExpensesQuery = useDaysWithExpenses();
+  const daysWithIncomesQuery = useDaysWithIncomes();
   const isCurrentDayToday = day === todayKey();
 
-  const expenses = expensesQuery.data ?? [];
-  const total = React.useMemo(() => sumExpenses(expenses), [expenses]);
-  const slices = React.useMemo(() => getCategoryBreakdown(expenses), [expenses]);
+  const markedDays = React.useMemo(
+    () => [...new Set([...(daysWithExpensesQuery.data ?? []), ...(daysWithIncomesQuery.data ?? [])])],
+    [daysWithExpensesQuery.data, daysWithIncomesQuery.data]
+  );
+
+  const isPending =
+    (typeFilter !== 'ingreso' && expensesQuery.isPending) ||
+    (typeFilter !== 'gasto' && incomesQuery.isPending);
+  const isRefetching = expensesQuery.isRefetching || incomesQuery.isRefetching;
+
+  const transactions = React.useMemo(
+    () => mergeTransactions(expensesQuery.data ?? [], incomesQuery.data ?? []),
+    [expensesQuery.data, incomesQuery.data]
+  );
+  const filtered = React.useMemo(
+    () => filterTransactions(transactions, { type: typeFilter, categoryId: categoryFilter }),
+    [transactions, typeFilter, categoryFilter]
+  );
+
+  const total = React.useMemo(() => {
+    if (typeFilter === 'ingreso') return sumExpenses(filtered);
+    if (typeFilter === 'gasto') return sumExpenses(filtered);
+    return sumNet(filtered);
+  }, [filtered, typeFilter]);
+  const slices = React.useMemo(() => getCategoryBreakdown(filtered), [filtered]);
 
   const renderItem = React.useCallback(
-    ({ item }: { item: Expense }) => (
-      <ExpenseCard
-        expense={item}
-        onPress={() => router.push({ pathname: '/expense/[id]', params: { id: item.id } })}
+    ({ item }: { item: Transaction }) => (
+      <TransactionCard
+        transaction={item}
+        onPress={() =>
+          router.push(
+            item.kind === 'gasto'
+              ? { pathname: '/expense/[id]', params: { id: item.id } }
+              : { pathname: '/income/[id]', params: { id: item.id } }
+          )
+        }
       />
     ),
     [router]
@@ -66,8 +114,8 @@ export default function HomeScreen() {
       <Stack.Screen options={SCREEN_OPTIONS} />
 
       <FlashList
-        data={expenses}
-        keyExtractor={(item) => item.id}
+        data={filtered}
+        keyExtractor={(item) => `${item.kind}-${item.id}`}
         renderItem={renderItem}
         contentContainerStyle={{
           paddingHorizontal: 16,
@@ -77,8 +125,11 @@ export default function HomeScreen() {
         ItemSeparatorComponent={() => <View className="h-3" />}
         refreshControl={
           <RefreshControl
-            refreshing={expensesQuery.isRefetching}
-            onRefresh={() => expensesQuery.refetch()}
+            refreshing={isRefetching}
+            onRefresh={() => {
+              expensesQuery.refetch();
+              incomesQuery.refetch();
+            }}
           />
         }
         ListHeaderComponent={
@@ -87,30 +138,32 @@ export default function HomeScreen() {
               <Button
                 variant="outline"
                 size="icon"
-                accessibilityLabel="Día anterior"
-                onPress={() => setDay((current) => shiftDayKey(current, -1))}>
+                accessibilityLabel="Período anterior"
+                onPress={() => setDay((current) => shiftPeriod(current, period, -1))}>
                 <Icon as={ChevronLeftIcon} className="size-5" />
               </Button>
 
               <View className="flex-1">
-                <DatePicker value={day} onChange={setDay} markedDays={daysQuery.data ?? []} />
+                <DatePicker value={day} onChange={setDay} markedDays={markedDays} period={period} />
               </View>
 
-              {isCurrentDayToday ? (
+              {isCurrentDayToday && period === 'dia' ? (
                 <View className="size-10 sm:size-9" />
               ) : (
                 <Button
                   variant="outline"
                   size="icon"
-                  accessibilityLabel="Día siguiente"
-                  onPress={() => setDay((current) => shiftDayKey(current, 1))}>
+                  accessibilityLabel="Período siguiente"
+                  onPress={() => setDay((current) => shiftPeriod(current, period, 1))}>
                   <Icon as={ChevronRightIcon} className="size-5" />
                 </Button>
               )}
             </View>
 
+            <PeriodTabs period={period} onPeriodChange={setPeriod} />
+
             <Card className="items-center py-6">
-              {expensesQuery.isPending ? (
+              {isPending ? (
                 <View className="h-[210px] justify-center">
                   <ActivityIndicator />
                 </View>
@@ -119,21 +172,20 @@ export default function HomeScreen() {
               )}
             </Card>
 
-            <View className="flex-row items-baseline justify-between px-1">
-              <Text className="text-lg font-semibold">Gastos del día</Text>
-              <Text className="text-muted-foreground text-sm">
-                {expenses.length === 1 ? '1 gasto' : `${expenses.length} gastos`} ·{' '}
-                {formatCurrency(total)}
-              </Text>
-            </View>
+            <TypeCategoryFilters
+              type={typeFilter}
+              onTypeChange={setTypeFilter}
+              categoryId={categoryFilter}
+              onCategoryChange={setCategoryFilter}
+            />
           </View>
         }
         ListEmptyComponent={
-          expensesQuery.isPending ? null : (
+          isPending ? null : (
             <View className="items-center gap-3 px-6 py-12">
               <Icon as={InboxIcon} className="text-muted-foreground size-10" />
               <Text className="text-muted-foreground text-center">
-                Sin gastos registrados este día.
+                Sin movimientos registrados en este período.
               </Text>
             </View>
           )

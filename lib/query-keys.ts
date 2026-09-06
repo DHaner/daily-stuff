@@ -3,7 +3,11 @@ import type { DayKey } from '@/lib/date';
 export const queryKeys = {
   expenses: ['expenses'] as const,
   expensesByDay: (day: DayKey) => ['expenses', 'day', day] as const,
+  expensesByRange: (start: DayKey, end: DayKey) => ['expenses', 'range', start, end] as const,
   expense: (id: string) => ['expenses', 'detail', id] as const,
   daysWithExpenses: ['expenses', 'days'] as const,
   incomes: ['incomes'] as const,
+  incomesByRange: (start: DayKey, end: DayKey) => ['incomes', 'range', start, end] as const,
+  income: (id: string) => ['incomes', 'detail', id] as const,
+  daysWithIncomes: ['incomes', 'days'] as const,
 };

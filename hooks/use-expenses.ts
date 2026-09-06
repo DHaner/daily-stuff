@@ -4,6 +4,7 @@ import {
   getExpenseById,
   listDaysWithExpenses,
   listExpensesByDate,
+  listExpensesByDateRange,
   updateExpense,
 } from '@/lib/db/expenses';
 import type { DayKey } from '@/lib/date';
@@ -18,6 +19,16 @@ export function useExpensesByDay(day: DayKey) {
   return useQuery({
     queryKey: queryKeys.expensesByDay(day),
     queryFn: () => listExpensesByDate(db, day),
+  });
+}
+
+export function useExpensesByRange(start: DayKey, end: DayKey, options?: { enabled?: boolean }) {
+  const db = useSQLiteContext();
+
+  return useQuery({
+    queryKey: queryKeys.expensesByRange(start, end),
+    queryFn: () => listExpensesByDateRange(db, start, end),
+    enabled: options?.enabled ?? true,
   });
 }
 

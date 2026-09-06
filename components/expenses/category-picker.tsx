@@ -1,22 +1,29 @@
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { CATEGORY_LIST, getCategory, type CategoryId } from '@/lib/categories';
+import { CATEGORY_LIST, getCategory, type Category, type CategoryId } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { Pressable, View } from 'react-native';
 
 type CategoryPickerProps = {
   value: string;
   onChange: (categoryId: CategoryId) => void;
+  /** Defaults to the expense category list. */
+  categories?: Category[];
   className?: string;
 };
 
 /** Horizontal chip picker — faster to tap on a phone than a dropdown. */
-export function CategoryPicker({ value, onChange, className }: CategoryPickerProps) {
+export function CategoryPicker({
+  value,
+  onChange,
+  categories = CATEGORY_LIST,
+  className,
+}: CategoryPickerProps) {
   const selected = getCategory(value);
 
   return (
     <View className={cn('flex-row flex-wrap gap-2', className)}>
-      {CATEGORY_LIST.map((category) => {
+      {categories.map((category) => {
         const isSelected = category.id === selected.id;
 
         return (
