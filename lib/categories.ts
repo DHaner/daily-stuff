@@ -1,87 +1,111 @@
-import {
-  BriefcaseIcon,
-  CarIcon,
-  ClapperboardIcon,
-  EllipsisIcon,
-  GiftIcon,
-  GraduationCapIcon,
-  HeartPulseIcon,
-  HouseIcon,
-  LaptopIcon,
-  LandmarkIcon,
-  RefreshCcwIcon,
-  ShoppingBagIcon,
-  TrendingUpIcon,
-  UtensilsCrossedIcon,
-  WalletIcon,
-  ZapIcon,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { getLabelIcon } from '@/lib/journal-icons';
+import type { LucideIcon } from 'lucide-react-native';
+import * as React from 'react';
 
-export type Category = {
+/** Categories are user-editable and stored in SQLite, so ids are plain strings. */
+export type CategoryId = string;
+
+/** `gasto` categories apply to expenses, `ingreso` categories to incomes. */
+export type CategoryKind = 'gasto' | 'ingreso';
+
+/** A category as stored in SQLite. */
+export type CategoryRecord = {
   id: CategoryId;
+  kind: CategoryKind;
   label: string;
+  /** Key of the Lucide icon, e.g. `Car`. */
+  iconName: string;
   /** Hex color: consumed by react-native-chart-kit, which cannot read Tailwind classes. */
   color: string;
-  icon: LucideIcon;
+  position: number;
 };
 
-export const EXPENSE_CATEGORY_IDS = [
-  'comida',
-  'transporte',
-  'hogar',
-  'compras',
-  'salud',
-  'ocio',
-  'servicios',
-  'educacion',
-  'otros',
-] as const;
+export type Category = CategoryRecord & { icon: LucideIcon };
 
-export const INCOME_CATEGORY_IDS = [
-  'salario',
-  'freelance',
-  'inversiones',
-  'negocio',
-  'regalo',
-  'reembolso',
-  'otros_ingreso',
-] as const;
-
-export const CATEGORY_IDS = [...EXPENSE_CATEGORY_IDS, ...INCOME_CATEGORY_IDS] as const;
-
-export type ExpenseCategoryId = (typeof EXPENSE_CATEGORY_IDS)[number];
-export type IncomeCategoryId = (typeof INCOME_CATEGORY_IDS)[number];
-export type CategoryId = (typeof CATEGORY_IDS)[number];
-
-export const CATEGORIES: Record<CategoryId, Category> = {
-  comida: { id: 'comida', label: 'Comida', color: '#f97316', icon: UtensilsCrossedIcon },
-  transporte: { id: 'transporte', label: 'Transporte', color: '#0ea5e9', icon: CarIcon },
-  hogar: { id: 'hogar', label: 'Hogar', color: '#14b8a6', icon: HouseIcon },
-  compras: { id: 'compras', label: 'Compras', color: '#a855f7', icon: ShoppingBagIcon },
-  salud: { id: 'salud', label: 'Salud', color: '#ef4444', icon: HeartPulseIcon },
-  ocio: { id: 'ocio', label: 'Ocio', color: '#ec4899', icon: ClapperboardIcon },
-  servicios: { id: 'servicios', label: 'Servicios', color: '#eab308', icon: ZapIcon },
-  educacion: { id: 'educacion', label: 'Educación', color: '#22c55e', icon: GraduationCapIcon },
-  otros: { id: 'otros', label: 'Otros', color: '#94a3b8', icon: EllipsisIcon },
-  salario: { id: 'salario', label: 'Salario', color: '#22c55e', icon: WalletIcon },
-  freelance: { id: 'freelance', label: 'Freelance', color: '#0ea5e9', icon: LaptopIcon },
-  inversiones: { id: 'inversiones', label: 'Inversiones', color: '#a855f7', icon: TrendingUpIcon },
-  negocio: { id: 'negocio', label: 'Negocio', color: '#f97316', icon: BriefcaseIcon },
-  regalo: { id: 'regalo', label: 'Regalo', color: '#ec4899', icon: GiftIcon },
-  reembolso: { id: 'reembolso', label: 'Reembolso', color: '#eab308', icon: RefreshCcwIcon },
-  otros_ingreso: { id: 'otros_ingreso', label: 'Otros', color: '#94a3b8', icon: LandmarkIcon },
-};
-
-export const EXPENSE_CATEGORY_LIST = EXPENSE_CATEGORY_IDS.map((id) => CATEGORIES[id]);
-export const INCOME_CATEGORY_LIST = INCOME_CATEGORY_IDS.map((id) => CATEGORIES[id]);
-
-/** @deprecated Use `EXPENSE_CATEGORY_LIST` — kept for expense-only call sites. */
-export const CATEGORY_LIST = EXPENSE_CATEGORY_LIST;
-
+/** Fallback categories: they can be edited but never deleted. */
 export const DEFAULT_CATEGORY: CategoryId = 'otros';
 export const DEFAULT_INCOME_CATEGORY: CategoryId = 'otros_ingreso';
 
+export function getDefaultCategoryId(kind: CategoryKind): CategoryId {
+  return kind === 'gasto' ? DEFAULT_CATEGORY : DEFAULT_INCOME_CATEGORY;
+}
+
+export function isDefaultCategory(id: CategoryId) {
+  return id === DEFAULT_CATEGORY || id === DEFAULT_INCOME_CATEGORY;
+}
+
+/**
+ * Mirrors the rows seeded by the categories migration. It is only what the app shows
+ * before SQLite has been read (`initDatabase` replaces it before the first screen).
+ */
+const FALLBACK_RECORDS: CategoryRecord[] = [
+  {
+    id: 'otros',
+    kind: 'gasto',
+    label: 'Otros',
+    iconName: 'Ellipsis',
+    color: '#94a3b8',
+    position: 1000,
+  },
+  {
+    id: 'otros_ingreso',
+    kind: 'ingreso',
+    label: 'Otros',
+    iconName: 'Landmark',
+    color: '#94a3b8',
+    position: 1000,
+  },
+];
+
+function toCategory(record: CategoryRecord): Category {
+  return { ...record, icon: getLabelIcon(record.iconName) };
+}
+
+// A module-level registry keeps `getCategory` synchronous for pure helpers (breakdown,
+// cards); `useCategories` subscribes components so they re-render when it changes.
+let registry: Category[] = FALLBACK_RECORDS.map(toCategory);
+let registryById = new Map(registry.map((category) => [category.id, category]));
+let version = 0;
+const listeners = new Set<() => void>();
+
+/** Replaces every known category (called after loading from, or writing to, SQLite). */
+export function setCategories(records: CategoryRecord[]) {
+  registry = [...records].sort((a, b) => a.position - b.position).map(toCategory);
+  registryById = new Map(registry.map((category) => [category.id, category]));
+  version += 1;
+  listeners.forEach((listener) => listener());
+}
+
 export function getCategory(id: string): Category {
-  return CATEGORIES[id as CategoryId] ?? CATEGORIES[DEFAULT_CATEGORY];
+  const category = registryById.get(id);
+
+  if (category) return category;
+
+  return registryById.get(DEFAULT_CATEGORY) ?? registry[0];
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+
+  return () => {
+    listeners.delete(listener);
+  };
+}
+
+/**
+ * The current categories, split by kind. Components that render a category should call
+ * this (even if they only use `getCategory`) so they update when categories are edited.
+ * `version` changes on every edit, for use in memo dependencies.
+ */
+export function useCategories() {
+  const currentVersion = React.useSyncExternalStore(subscribe, () => version);
+
+  return React.useMemo(
+    () => ({
+      expense: registry.filter((category) => category.kind === 'gasto'),
+      income: registry.filter((category) => category.kind === 'ingreso'),
+      version: currentVersion,
+    }),
+    [currentVersion]
+  );
 }

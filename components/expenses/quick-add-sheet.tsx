@@ -11,9 +11,8 @@ import { Text } from '@/components/ui/text';
 import {
   DEFAULT_CATEGORY,
   DEFAULT_INCOME_CATEGORY,
-  EXPENSE_CATEGORY_LIST,
-  INCOME_CATEGORY_LIST,
   getCategory,
+  useCategories,
   type CategoryId,
 } from '@/lib/categories';
 import type { DayKey } from '@/lib/date';
@@ -65,7 +64,8 @@ export const QuickAddSheet = React.forwardRef<QuickAddSheetHandle, QuickAddSheet
   const [concept, setConcept] = React.useState('');
   const [categoryId, setCategoryId] = React.useState<CategoryId>(DEFAULT_CATEGORY);
 
-  const categoryList = type === 'gasto' ? EXPENSE_CATEGORY_LIST : INCOME_CATEGORY_LIST;
+  const categories = useCategories();
+  const categoryList = type === 'gasto' ? categories.expense : categories.income;
 
   function closeMenus() {
     categoryTriggerRef.current?.close();

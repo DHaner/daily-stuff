@@ -35,7 +35,14 @@
         }
       ],
       "expo-status-bar",
-       [
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Finanzas necesita acceso a tus fotos para adjuntarlas a las entradas del diario.",
+          "cameraPermission": "Finanzas necesita acceso a la cámara para tomar fotos para las entradas del diario."
+        }
+      ],
+      [
         "expo-sqlite",
         {
           "enableFTS": true,
@@ -45,10 +52,13 @@
             "useSQLCipher": false
           },
           "ios": {
-            "customBuildFlags": ["-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_SNAPSHOT=1"]
+            "customBuildFlags": [
+              "-DSQLITE_ENABLE_DBSTAT_VTAB=1 -DSQLITE_ENABLE_SNAPSHOT=1"
+            ]
           }
         }
-      ]
+      ],
+      "expo-image"
     ],
     "experiments": {
       "typedRoutes": true

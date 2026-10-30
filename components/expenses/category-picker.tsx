@@ -1,6 +1,6 @@
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { CATEGORY_LIST, getCategory, type Category, type CategoryId } from '@/lib/categories';
+import { getCategory, useCategories, type Category, type CategoryId } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { Pressable, View } from 'react-native';
 
@@ -16,14 +16,16 @@ type CategoryPickerProps = {
 export function CategoryPicker({
   value,
   onChange,
-  categories = CATEGORY_LIST,
+  categories,
   className,
 }: CategoryPickerProps) {
+  const { expense } = useCategories();
+  const options = categories ?? expense;
   const selected = getCategory(value);
 
   return (
     <View className={cn('flex-row flex-wrap gap-2', className)}>
-      {categories.map((category) => {
+      {options.map((category) => {
         const isSelected = category.id === selected.id;
 
         return (

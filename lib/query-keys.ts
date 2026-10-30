@@ -12,4 +12,10 @@ export const queryKeys = {
   incomesByCategory: (categoryId: string) => ['incomes', 'category', categoryId] as const,
   income: (id: string) => ['incomes', 'detail', id] as const,
   daysWithIncomes: ['incomes', 'days'] as const,
+  journal: ['journal'] as const,
+  journalLabels: ['journal', 'labels'] as const,
+  journalEntriesByRange: (start: DayKey, end: DayKey) =>
+    ['journal', 'entries', 'range', start, end] as const,
+  journalEntry: (date: DayKey) => ['journal', 'entries', 'day', date] as const,
+  daysWithJournalEntries: ['journal', 'days'] as const,
 };

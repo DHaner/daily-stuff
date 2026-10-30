@@ -10,6 +10,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useDaysWithExpenses, useExpensesByRange } from '@/hooks/use-expenses';
 import { useDaysWithIncomes, useIncomesByRange } from '@/hooks/use-incomes';
+import { useCategories } from '@/lib/categories';
 import { getCategoryBreakdown, getTypeBreakdown, sumExpenses } from '@/lib/breakdown';
 import {
   formatDayLabel,
@@ -33,7 +34,13 @@ import {
 } from '@/lib/transactions';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
-import { ChevronLeftIcon, ChevronRightIcon, InboxIcon, PlusIcon } from 'lucide-react-native';
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  InboxIcon,
+  PlusIcon,
+  ShapesIcon,
+} from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, RefreshControl, View } from 'react-native';
 import Animated, {
@@ -43,11 +50,6 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const SCREEN_OPTIONS = {
-  title: 'Finanzas',
-  headerRight: () => <ThemeToggle />,
-};
 
 const PERIOD_NOUN: Record<Period, string> = {
   dia: 'día',
@@ -64,6 +66,7 @@ type ListRow =
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { version: categoriesVersion } = useCategories();
   const [day, setDay] = React.useState(todayKey);
   const [period, setPeriod] = React.useState<Period>('dia');
   const [typeFilter, setTypeFilter] = React.useState<TypeFilter>('todos');
@@ -113,7 +116,8 @@ export default function HomeScreen() {
       return getTypeBreakdown(filtered);
     }
     return getCategoryBreakdown(filtered);
-  }, [filtered, typeFilter]);
+    // Slices carry category labels/colors, so they must be rebuilt when categories are edited.
+  }, [filtered, typeFilter, categoriesVersion]);
 
   const rows = React.useMemo<ListRow[]>(() => {
     if (groupByCategory) {
@@ -190,7 +194,24 @@ export default function HomeScreen() {
 
   return (
     <View className="bg-background flex-1">
-      <Stack.Screen options={SCREEN_OPTIONS} />
+      <Stack.Screen
+        options={{
+          title: 'Finanzas',
+          headerRight: () => (
+            <View className="flex-row items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="rounded-full"
+                accessibilityLabel="Gestionar categorías"
+                onPress={() => router.push('/categories')}>
+                <Icon as={ShapesIcon} className="size-5" />
+              </Button>
+              <ThemeToggle />
+            </View>
+          ),
+        }}
+      />
 
       <FlashList
         data={rows}

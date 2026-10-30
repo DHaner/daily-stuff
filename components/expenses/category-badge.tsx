@@ -1,6 +1,6 @@
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { getCategory } from '@/lib/categories';
+import { getCategory, useCategories } from '@/lib/categories';
 import { cn } from '@/lib/utils';
 import { View } from 'react-native';
 
@@ -11,6 +11,7 @@ export function CategoryBadge({
   categoryId: string;
   className?: string;
 }) {
+  useCategories();
   const category = getCategory(categoryId);
 
   return (

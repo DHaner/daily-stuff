@@ -1,7 +1,8 @@
 import '@/global.css';
 
 import { PERSIST_MAX_AGE, queryClient, queryPersister } from '@/lib/query-client';
-import { DATABASE_NAME, migrateDbIfNeeded } from '@/lib/db/schema';
+import { initDatabase } from '@/lib/db/init';
+import { DATABASE_NAME } from '@/lib/db/schema';
 import { NAV_THEME } from '@/lib/theme';
 import { applyStoredThemePreference } from '@/lib/theme-preference';
 import { PortalHost } from '@rn-primitives/portal';
@@ -50,7 +51,7 @@ function RootLayoutNav() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SQLiteProvider databaseName={DATABASE_NAME} onInit={migrateDbIfNeeded}>
+      <SQLiteProvider databaseName={DATABASE_NAME} onInit={initDatabase}>
         <PersistQueryClientProvider
           client={queryClient}
           persistOptions={{ persister: queryPersister, maxAge: PERSIST_MAX_AGE }}>
@@ -58,8 +59,11 @@ function RootLayoutNav() {
             <BottomSheetModalProvider>
               <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
               <Stack>
-                <Stack.Screen name="index" options={{ title: 'Finanzas' }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="expense/[id]" options={{ title: 'Detalle del gasto' }} />
+                <Stack.Screen name="categories" options={{ title: 'Categorías' }} />
+                <Stack.Screen name="journal/[date]" options={{ title: 'Entrada del diario' }} />
+                <Stack.Screen name="journal/labels" options={{ title: 'Etiquetas' }} />
               </Stack>
               <PortalHost />
             </BottomSheetModalProvider>

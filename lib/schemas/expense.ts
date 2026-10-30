@@ -1,7 +1,8 @@
-import { CATEGORY_IDS, DEFAULT_CATEGORY } from '@/lib/categories';
+import { DEFAULT_CATEGORY } from '@/lib/categories';
 import { z } from 'zod';
 
-export const categoryIdSchema = z.enum(CATEGORY_IDS).catch(DEFAULT_CATEGORY);
+/** Categories are user-defined, so any non-empty id is valid; `getCategory` handles unknown ids. */
+export const categoryIdSchema = z.string().min(1).catch(DEFAULT_CATEGORY);
 
 /** `yyyy-MM-dd`, the key used to group expenses by day. */
 export const dayKeySchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha inválida');

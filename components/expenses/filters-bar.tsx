@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { EXPENSE_CATEGORY_LIST, INCOME_CATEGORY_LIST, getCategory } from '@/lib/categories';
+import { getCategory, useCategories } from '@/lib/categories';
 import type { Period } from '@/lib/date';
 import type { CategoryFilter, TypeFilter } from '@/lib/transactions';
 import { cn } from '@/lib/utils';
@@ -71,6 +71,8 @@ export function TypeCategoryFilters({
   groupByCategory,
   onGroupByCategoryChange,
 }: TypeCategoryFiltersProps) {
+  const categories = useCategories();
+
   function handleTypeChange(nextType: TypeFilter) {
     onTypeChange(nextType);
     // The previously selected category may not exist for the new type.
@@ -127,7 +129,7 @@ export function TypeCategoryFilters({
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Gastos</DropdownMenuLabel>
-                {EXPENSE_CATEGORY_LIST.map((category) => (
+                {categories.expense.map((category) => (
                   <DropdownMenuRadioItem key={category.id} value={category.id}>
                     <Icon as={category.icon} className="size-4" color={category.color} />
                     <Text>{category.label}</Text>
@@ -140,7 +142,7 @@ export function TypeCategoryFilters({
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Ingresos</DropdownMenuLabel>
-                {INCOME_CATEGORY_LIST.map((category) => (
+                {categories.income.map((category) => (
                   <DropdownMenuRadioItem key={category.id} value={category.id}>
                     <Icon as={category.icon} className="size-4" color={category.color} />
                     <Text>{category.label}</Text>

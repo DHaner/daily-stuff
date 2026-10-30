@@ -2,13 +2,14 @@ import { CategoryBadge } from '@/components/expenses/category-badge';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { getCategory } from '@/lib/categories';
+import { getCategory, useCategories } from '@/lib/categories';
 import { formatCurrency } from '@/lib/format';
 import type { Expense } from '@/lib/schemas/expense';
 import { ChevronRightIcon, LayersIcon } from 'lucide-react-native';
 import { Pressable, View } from 'react-native';
 
 export function ExpenseCard({ expense, onPress }: { expense: Expense; onPress: () => void }) {
+  useCategories();
   const category = getCategory(expense.categoryId);
   const itemCount = expense.items.length;
 

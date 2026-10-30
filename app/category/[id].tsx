@@ -4,7 +4,7 @@ import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { useExpensesByCategory } from '@/hooks/use-expenses';
 import { useIncomesByCategory } from '@/hooks/use-incomes';
-import { EXPENSE_CATEGORY_IDS, getCategory } from '@/lib/categories';
+import { getCategory, useCategories } from '@/lib/categories';
 import { formatDayLabel, type DayKey } from '@/lib/date';
 import { formatCurrency } from '@/lib/format';
 import { mergeTransactions, sumNet, type Transaction } from '@/lib/transactions';
@@ -21,8 +21,9 @@ type ListRow =
 export default function CategoryDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const isExpenseCategory = EXPENSE_CATEGORY_IDS.includes(id as (typeof EXPENSE_CATEGORY_IDS)[number]);
+  useCategories();
   const category = getCategory(id);
+  const isExpenseCategory = category.kind === 'gasto';
 
   const expensesQuery = useExpensesByCategory(id, { enabled: isExpenseCategory });
   const incomesQuery = useIncomesByCategory(id, { enabled: !isExpenseCategory });

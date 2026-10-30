@@ -14,9 +14,13 @@ Pantallas:
 
 | Ruta | Archivo | Qué hace |
 | --- | --- | --- |
-| `/` | `app/index.tsx` | Botón de fecha (abre calendario), doughnut por categoría, lista de gastos del día, FAB para agregar |
+| `/` | `app/(tabs)/index.tsx` | Tab "Finanzas": botón de fecha (abre calendario), doughnut por categoría, lista de gastos del día, FAB para agregar |
 | `/expense/new` | `app/expense/new.tsx` | Modal (`presentation: 'modal'`) para crear un gasto |
 | `/expense/[id]` | `app/expense/[id].tsx` | Detalle del gasto; el icono de lápiz cambia a modo edición |
+| `/journal` | `app/(tabs)/journal.tsx` | Tab "Diario": lista de entradas (una por día) filtrada por mes, con FAB para escribir la de hoy |
+| `/journal/[date]` | `app/journal/[date].tsx` | Crea/edita la entrada de un día: ánimo (good/normal/meh/bad/awful), nota, 1 foto y etiquetas |
+| `/categories` | `app/categories.tsx` | Crea, edita y elimina categorías de gastos/ingresos (nombre + icono + color) |
+| `/journal/labels` | `app/journal/labels.tsx` | Crea, edita (tocando una) y elimina etiquetas (nombre + icono + color; la migración v4 siembra 5 por defecto); el icono se elige en `components/journal/icon-picker.tsx` |
 
 ## Comandos
 
@@ -73,7 +77,8 @@ con `node_modules` y falla el autolinking en tiempo de ejecución.
 | Listas | `@shopify/flash-list` | v2, no necesita `estimatedItemSize` |
 | Gráfica | `react-native-chart-kit` + `react-native-svg` | `PieChart` con agujero simulado |
 | Calendario | `react-native-calendars` | Locale `es` configurado en `date-picker.tsx` |
-| Iconos | `lucide-react-native` | Siempre vía `<Icon as={XIcon} />` |
+| Iconos | `lucide-react-native` | Siempre vía `<Icon as={XIcon} />`; las etiquetas del diario guardan el nombre del icono (`lib/journal-icons.ts`) |
+| Fotos | `expo-image-picker` + `expo-file-system` + `expo-image` | La foto del diario se copia a `Paths.document/journal` (`lib/journal-photos.ts`) |
 | Gestos | `react-native-gesture-handler` | `GestureHandlerRootView` en el layout raíz |
 
 ## Estructura
@@ -103,9 +108,16 @@ como la suma de sus montos (ver el `useEffect` en `expense-form.tsx`). Si la sum
 el total (envío, impuestos), el remanente se atribuye a la categoría del gasto padre —
 esa regla vive en `getCategoryBreakdown` (`lib/breakdown.ts`) y en el detalle del gasto.
 
-**Categorías.** Fuente única de verdad en `lib/categories.ts`: id, etiqueta, color hex e
-icono. El color hex existe porque chart-kit y react-native-calendars no leen clases de
-Tailwind. Para agregar una categoría basta con añadirla a `CATEGORY_IDS` y `CATEGORIES`.
+**Categorías.** Son editables por el usuario y viven en la tabla `categories` de SQLite
+(id, tipo `gasto`/`ingreso`, nombre, icono, color hex, posición); la migración v5 siembra las
+que antes estaban en código. `lib/categories.ts` mantiene un registro en memoria: `getCategory(id)`
+es síncrona (para helpers puros como `breakdown`), y `useCategories()` suscribe al componente para
+que se re-renderice cuando se editan (úsalo en todo componente que pinte una categoría y, si
+memoizas algo con etiquetas/colores, añade `version` a las dependencias). `initDatabase`
+(`lib/db/init.ts`) carga el registro antes del primer render y `hooks/use-categories.ts` lo
+recarga tras cada cambio. `otros` / `otros_ingreso` son el respaldo: se pueden editar pero no
+eliminar; al borrar una categoría, sus gastos/ingresos pasan a ese respaldo. El color es hex
+porque chart-kit y react-native-calendars no leen clases de Tailwind. Se gestionan en `/categories`.
 
 **Acceso a datos.** Los componentes nunca hablan con SQLite directamente: usan los hooks de
 `hooks/use-expenses.ts`, que envuelven las funciones de `lib/db/expenses.ts`. Toda mutación

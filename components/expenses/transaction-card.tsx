@@ -1,7 +1,7 @@
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { getCategory } from '@/lib/categories';
+import { getCategory, useCategories } from '@/lib/categories';
 import { formatCurrency } from '@/lib/format';
 import type { CategoryTotal, Transaction } from '@/lib/transactions';
 import { cn } from '@/lib/utils';
@@ -15,6 +15,7 @@ export function TransactionCard({
   transaction: Transaction;
   onPress?: () => void;
 }) {
+  useCategories();
   const category = getCategory(transaction.categoryId);
   const itemCount = transaction.items.length;
   const isIncome = transaction.kind === 'ingreso';
@@ -33,8 +34,7 @@ export function TransactionCard({
       accessibilityRole="button"
       className="active:opacity-70">
       <Card
-        className="flex-row items-center gap-3 px-4 py-3"
-        style={{ borderLeftWidth: 4, borderLeftColor: category.color }}>
+        className="flex-row items-center gap-3 px-4 py-3">
         <View
           className="size-11 items-center justify-center rounded-full"
           style={{ backgroundColor: `${category.color}22` }}>
@@ -76,6 +76,7 @@ export function CategorySummaryCard({
   categoryTotal: CategoryTotal;
   onPress?: () => void;
 }) {
+  useCategories();
   const category = getCategory(categoryTotal.categoryId);
   const isIncome = categoryTotal.kind === 'ingreso';
 

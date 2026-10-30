@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
-import { DEFAULT_INCOME_CATEGORY, INCOME_CATEGORY_LIST } from '@/lib/categories';
+import { DEFAULT_INCOME_CATEGORY, useCategories } from '@/lib/categories';
 import { todayKey, type DayKey } from '@/lib/date';
 import {
   formatAmountInput,
@@ -80,6 +80,7 @@ export const IncomeForm = React.forwardRef<IncomeFormHandle, IncomeFormProps>(
     { defaultValues, submitLabel, isSubmitting = false, onSubmit, markedDays, footer },
     ref
   ) {
+    const { income: incomeCategories } = useCategories();
     const form = useForm<IncomeFormInput, unknown, IncomeFormValues>({
       resolver: zodResolver(incomeFormSchema),
       defaultValues,
@@ -195,7 +196,7 @@ export const IncomeForm = React.forwardRef<IncomeFormHandle, IncomeFormProps>(
               <CategoryPicker
                 value={field.value}
                 onChange={field.onChange}
-                categories={INCOME_CATEGORY_LIST}
+                categories={incomeCategories}
               />
             </FormField>
           )}
@@ -277,7 +278,7 @@ export const IncomeForm = React.forwardRef<IncomeFormHandle, IncomeFormProps>(
                       <CategoryPicker
                         value={field.value}
                         onChange={field.onChange}
-                        categories={INCOME_CATEGORY_LIST}
+                        categories={incomeCategories}
                       />
                     </FormField>
                   )}
