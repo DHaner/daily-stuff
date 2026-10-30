@@ -93,11 +93,6 @@ export function ColorSlider({
             borderWidth: 3,
             borderColor: '#ffffff',
             backgroundColor: thumbColor,
-            shadowColor: '#000000',
-            shadowOpacity: 0.3,
-            shadowRadius: 3,
-            shadowOffset: { width: 0, height: 1 },
-            elevation: 3,
           }}
         />
       </View>

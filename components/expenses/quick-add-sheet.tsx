@@ -16,6 +16,7 @@ import {
   type CategoryId,
 } from '@/lib/categories';
 import type { DayKey } from '@/lib/date';
+import { PALETTE } from '@/lib/theme';
 import { formatAmountInput, parseAmountInput, sanitizeAmountInput } from '@/lib/format';
 import { useCreateExpense } from '@/hooks/use-expenses';
 import { useCreateIncome } from '@/hooks/use-incomes';
@@ -43,8 +44,8 @@ type QuickAddSheetProps = {
 };
 
 const SHEET_COLORS = {
-  light: { background: '#ffffff', handle: '#e5e5e5' },
-  dark: { background: '#171717', handle: '#2a2a2a' },
+  light: { background: PALETTE.light.card, handle: PALETTE.light.border },
+  dark: { background: PALETTE.dark.card, handle: PALETTE.dark.border },
 } as const;
 
 export const QuickAddSheet = React.forwardRef<QuickAddSheetHandle, QuickAddSheetProps>(
@@ -212,7 +213,7 @@ export const QuickAddSheet = React.forwardRef<QuickAddSheetHandle, QuickAddSheet
             style={{
               fontSize: 32,
               fontWeight: '700',
-              color: theme === 'dark' ? '#fafafa' : '#0a0a0a',
+              color: PALETTE[theme ?? 'light'].foreground,
               paddingVertical: 8,
             }}
           />
@@ -232,7 +233,7 @@ export const QuickAddSheet = React.forwardRef<QuickAddSheetHandle, QuickAddSheet
           onSubmitEditing={() => Keyboard.dismiss()}
           style={{
             fontSize: 16,
-            color: theme === 'dark' ? '#fafafa' : '#0a0a0a',
+            color: PALETTE[theme ?? 'light'].foreground,
           }}
         />
       </BottomSheetView>

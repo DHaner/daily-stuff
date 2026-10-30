@@ -123,7 +123,7 @@ export default function JournalScreen() {
       <View className="absolute right-5" style={{ bottom: insets.bottom + 24 }}>
         <Button
           size="icon"
-          className="size-16 rounded-full shadow-lg shadow-black/25"
+          className="size-16 rounded-full"
           accessibilityLabel="Escribir la entrada de hoy"
           onPress={() => openEntry(todayKey())}>
           <Icon as={PlusIcon} className="size-7" />

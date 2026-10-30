@@ -147,19 +147,14 @@ export default function JournalEntryScreen() {
           <MoodPicker value={mood} onChange={setMood} />
         </View>
 
-        <View className="gap-2">
-          <Text className="text-sm font-semibold">Nota</Text>
-          <Textarea
-            value={note}
-            onChangeText={setNote}
-            placeholder="¿Qué pasó en el día?"
-            numberOfLines={6}
-            className="min-h-32"
-          />
-        </View>
+        <Textarea
+          value={note}
+          onChangeText={setNote}
+          placeholder="¿Qué pasó en el día?"
+          numberOfLines={6}
+        />
 
-        <View className="gap-2">
-          <Text className="text-sm font-semibold">Foto</Text>
+        <View>
           {photoUri ? (
             <View>
               <Image
@@ -223,15 +218,13 @@ export default function JournalEntryScreen() {
         </View>
 
         {saveEntry.isError ? (
-          <View className="bg-destructive/10 rounded-md p-3">
-            <Text className="text-destructive text-sm">
-              No se pudo guardar la entrada. Inténtalo de nuevo.
-            </Text>
-          </View>
+          <Text className="text-destructive text-xs">
+            No se pudo guardar la entrada. Inténtalo de nuevo.
+          </Text>
         ) : null}
 
         <Button size="lg" disabled={!canSave} onPress={handleSave}>
-          <Text>{saveEntry.isPending ? 'Guardando…' : 'Guardar entrada'}</Text>
+          <Text>{saveEntry.isPending ? 'Guardando…' : 'Guardar'}</Text>
         </Button>
       </ScrollView>
     </KeyboardAvoidingView>

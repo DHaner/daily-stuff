@@ -20,7 +20,7 @@ export function GoToTodayButton({ visible, onPress, bottom }: GoToTodayButtonPro
       <Button
         size="sm"
         variant="secondary"
-        className="rounded-full shadow-md shadow-black/25"
+        className="rounded-full"
         onPress={onPress}>
         <Icon as={ArrowUpIcon} className="size-4" />
         <Text variant="small">Ir a hoy</Text>

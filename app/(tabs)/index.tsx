@@ -268,7 +268,7 @@ export default function HomeScreen() {
         pointerEvents="box-none">
         <Button
           size="icon"
-          className="size-16 rounded-full shadow-lg shadow-black/25"
+          className="size-16 rounded-full"
           accessibilityLabel="Agregar nuevo gasto"
           onPress={() => quickAddRef.current?.present(todayKey())}>
           <Icon as={PlusIcon} className="size-7" />

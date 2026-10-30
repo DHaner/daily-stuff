@@ -165,7 +165,6 @@ export default function TaskScreen() {
           onChangeText={setDescription}
           placeholder="Descripción (opcional)"
           numberOfLines={4}
-          className="min-h-24"
         />
 
         {lists.length > 0 ? (
@@ -313,11 +312,9 @@ export default function TaskScreen() {
         </View>
 
         {updateTask.isError ? (
-          <View className="bg-destructive/10 rounded-md p-3">
-            <Text className="text-destructive text-sm">
-              No se pudo guardar la tarea. Inténtalo de nuevo.
-            </Text>
-          </View>
+          <Text className="text-destructive text-xs">
+            No se pudo guardar la tarea. Inténtalo de nuevo.
+          </Text>
         ) : null}
 
         <Button

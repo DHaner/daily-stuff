@@ -125,11 +125,9 @@ export default function TodoListScreen() {
         <ColorPicker value={color} onChange={setColor} />
 
         {isError ? (
-          <View className="bg-destructive/10 rounded-md p-3">
-            <Text className="text-destructive text-sm">
-              No se pudo guardar la lista. Inténtalo de nuevo.
-            </Text>
-          </View>
+          <Text className="text-destructive text-xs">
+            No se pudo guardar la lista. Inténtalo de nuevo.
+          </Text>
         ) : null}
 
         <Button size="lg" disabled={!parsed.success || isSaving} onPress={handleSave}>
