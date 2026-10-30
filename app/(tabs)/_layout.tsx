@@ -1,6 +1,6 @@
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Tabs } from 'expo-router';
-import { BookHeartIcon, WalletIcon } from 'lucide-react-native';
+import { BookHeartIcon, ListChecksIcon, WalletIcon } from 'lucide-react-native';
 
 const SCREEN_OPTIONS = {
   headerRight: () => <ThemeToggle />,
@@ -21,6 +21,13 @@ export default function TabsLayout() {
         options={{
           title: 'Diario',
           tabBarIcon: ({ color, size }) => <BookHeartIcon color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
+        name="tasks"
+        options={{
+          title: 'Tareas',
+          tabBarIcon: ({ color, size }) => <ListChecksIcon color={color} size={size} />,
         }}
       />
     </Tabs>

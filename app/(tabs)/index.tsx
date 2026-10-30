@@ -1,27 +1,22 @@
-import { DatePicker } from '@/components/expenses/date-picker';
 import { ExpensesDoughnut } from '@/components/expenses/expenses-doughnut';
-import { PeriodTabs, TypeCategoryFilters } from '@/components/expenses/filters-bar';
+import { TypeCategoryFilters } from '@/components/expenses/filters-bar';
 import { QuickAddSheet, type QuickAddSheetHandle } from '@/components/expenses/quick-add-sheet';
 import { CategorySummaryCard, TransactionCard } from '@/components/expenses/transaction-card';
+import { GoToTodayButton } from '@/components/go-to-today-button';
+import { MonthNav } from '@/components/month-nav';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useDaysWithExpenses, useExpensesByRange } from '@/hooks/use-expenses';
-import { useDaysWithIncomes, useIncomesByRange } from '@/hooks/use-incomes';
+import { useExpensesByRange } from '@/hooks/use-expenses';
+import { useIncomesByRange } from '@/hooks/use-incomes';
+import { useMonthScroll } from '@/hooks/use-month-scroll';
 import { useCategories } from '@/lib/categories';
 import { getCategoryBreakdown, getTypeBreakdown, sumExpenses } from '@/lib/breakdown';
-import {
-  formatDayLabel,
-  getPeriodRange,
-  isCurrentPeriod,
-  shiftPeriod,
-  todayKey,
-  type DayKey,
-  type Period,
-} from '@/lib/date';
 import { formatCurrency } from '@/lib/format';
+import { ALL_TIME, formatDayLabel, toMonthKey, todayKey, type DayKey } from '@/lib/date';
+import { groupByDay } from '@/lib/day-groups';
 import {
   filterTransactions,
   groupTransactionsByCategory,
@@ -34,13 +29,7 @@ import {
 } from '@/lib/transactions';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  InboxIcon,
-  PlusIcon,
-  ShapesIcon,
-} from 'lucide-react-native';
+import { InboxIcon, PlusIcon, ShapesIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, RefreshControl, View } from 'react-native';
 import Animated, {
@@ -51,46 +40,28 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const PERIOD_NOUN: Record<Period, string> = {
-  dia: 'día',
-  semana: 'semana',
-  mes: 'mes',
-  anio: 'año',
-};
-
+/** Every row carries the day (or, for category summaries, the month) it belongs to. */
 type ListRow =
   | { type: 'header'; date: DayKey }
-  | { type: 'transaction'; transaction: Transaction }
-  | { type: 'category'; categoryTotal: CategoryTotal };
+  | { type: 'item'; date: DayKey; item: Transaction }
+  | { type: 'category'; date: DayKey; categoryTotal: CategoryTotal };
 
 export default function HomeScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { version: categoriesVersion } = useCategories();
-  const [day, setDay] = React.useState(todayKey);
-  const [period, setPeriod] = React.useState<Period>('dia');
   const [typeFilter, setTypeFilter] = React.useState<TypeFilter>('todos');
   const [categoryFilter, setCategoryFilter] = React.useState<CategoryFilter>('todas');
   const [groupByCategory, setGroupByCategory] = React.useState(false);
   const quickAddRef = React.useRef<QuickAddSheetHandle>(null);
   const animatedIndex = useSharedValue(-1);
 
-  const range = React.useMemo(() => getPeriodRange(day, period), [day, period]);
-
-  const expensesQuery = useExpensesByRange(range.start, range.end, {
+  const expensesQuery = useExpensesByRange(ALL_TIME.start, ALL_TIME.end, {
     enabled: typeFilter !== 'ingreso',
   });
-  const incomesQuery = useIncomesByRange(range.start, range.end, {
+  const incomesQuery = useIncomesByRange(ALL_TIME.start, ALL_TIME.end, {
     enabled: typeFilter !== 'gasto',
   });
-  const daysWithExpensesQuery = useDaysWithExpenses();
-  const daysWithIncomesQuery = useDaysWithIncomes();
-  const isCurrentPeriodSelected = isCurrentPeriod(day, period);
-
-  const markedDays = React.useMemo(
-    () => [...new Set([...(daysWithExpensesQuery.data ?? []), ...(daysWithIncomesQuery.data ?? [])])],
-    [daysWithExpensesQuery.data, daysWithIncomesQuery.data]
-  );
 
   const isPending =
     (typeFilter !== 'ingreso' && expensesQuery.isPending) ||
@@ -106,44 +77,55 @@ export default function HomeScreen() {
     [transactions, typeFilter, categoryFilter]
   );
 
+  // The full history, newest first, with a header before each day.
+  const dayRows = React.useMemo<ListRow[]>(
+    () => groupByDay(filtered, (transaction) => transaction.date),
+    [filtered]
+  );
+  const {
+    listRef,
+    month,
+    months,
+    goToMonth,
+    showTop,
+    onScroll,
+    scrollToTop,
+    onViewableItemsChanged,
+    viewabilityConfig,
+  } =
+    useMonthScroll<ListRow>(dayRows, !groupByCategory);
+
+  // The chart and totals summarize whichever month the header is showing.
+  const monthTransactions = React.useMemo(
+    () => filtered.filter((transaction) => toMonthKey(transaction.date) === month),
+    [filtered, month]
+  );
+
   const total = React.useMemo(() => {
-    if (typeFilter === 'ingreso') return sumExpenses(filtered);
-    if (typeFilter === 'gasto') return sumExpenses(filtered);
-    return sumNet(filtered);
-  }, [filtered, typeFilter]);
+    if (typeFilter === 'ingreso') return sumExpenses(monthTransactions);
+    if (typeFilter === 'gasto') return sumExpenses(monthTransactions);
+    return sumNet(monthTransactions);
+  }, [monthTransactions, typeFilter]);
   const slices = React.useMemo(() => {
     if (typeFilter === 'todos') {
-      return getTypeBreakdown(filtered);
+      return getTypeBreakdown(monthTransactions);
     }
-    return getCategoryBreakdown(filtered);
+    return getCategoryBreakdown(monthTransactions);
     // Slices carry category labels/colors, so they must be rebuilt when categories are edited.
-  }, [filtered, typeFilter, categoriesVersion]);
+  }, [monthTransactions, typeFilter, categoriesVersion]);
 
-  const rows = React.useMemo<ListRow[]>(() => {
-    if (groupByCategory) {
-      return groupTransactionsByCategory(filtered).map((categoryTotal) => ({
-        type: 'category',
-        categoryTotal,
-      }));
-    }
-
-    if (period === 'dia') {
-      return filtered.map((transaction) => ({ type: 'transaction', transaction }));
-    }
-
-    const result: ListRow[] = [];
-    let lastDate: DayKey | null = null;
-
-    for (const transaction of filtered) {
-      if (transaction.date !== lastDate) {
-        result.push({ type: 'header', date: transaction.date });
-        lastDate = transaction.date;
-      }
-      result.push({ type: 'transaction', transaction });
-    }
-
-    return result;
-  }, [filtered, period, groupByCategory]);
+  // Category summaries are a per-month view, so they replace the day-by-day history.
+  const rows = React.useMemo<ListRow[]>(
+    () =>
+      groupByCategory
+        ? groupTransactionsByCategory(monthTransactions).map((categoryTotal) => ({
+            type: 'category',
+            date: `${month}-01`,
+            categoryTotal,
+          }))
+        : dayRows,
+    [groupByCategory, monthTransactions, month, dayRows]
+  );
 
   const renderItem = React.useCallback(
     ({ item }: { item: ListRow }) => {
@@ -169,7 +151,7 @@ export default function HomeScreen() {
         );
       }
 
-      const transaction = item.transaction;
+      const transaction = item.item;
       return (
         <TransactionCard
           transaction={transaction}
@@ -197,6 +179,8 @@ export default function HomeScreen() {
       <Stack.Screen
         options={{
           title: 'Finanzas',
+          headerTitleAlign: 'center',
+          headerTitle: () => <MonthNav months={months} value={month} onChange={goToMonth} />,
           headerRight: () => (
             <View className="flex-row items-center">
               <Button
@@ -214,14 +198,19 @@ export default function HomeScreen() {
       />
 
       <FlashList
+        ref={listRef}
         data={rows}
         keyExtractor={(row) => {
           if (row.type === 'header') return `header-${row.date}`;
           if (row.type === 'category') return `category-${row.categoryTotal.categoryId}`;
-          return `${row.transaction.kind}-${row.transaction.id}`;
+          return `${row.item.kind}-${row.item.id}`;
         }}
         getItemType={(row) => row.type}
         renderItem={renderItem}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 16,
@@ -239,34 +228,6 @@ export default function HomeScreen() {
         }
         ListHeaderComponent={
           <View className="mb-4 gap-4">
-            <View className="flex-row items-center justify-between gap-2 w-full">
-              <Button
-                variant="outline"
-                size="icon"
-                accessibilityLabel="Período anterior"
-                onPress={() => setDay((current) => shiftPeriod(current, period, -1))}>
-                <Icon as={ChevronLeftIcon} className="size-5" />
-              </Button>
-
-              <View className="flex-1">
-                <DatePicker value={day} onChange={setDay} markedDays={markedDays} period={period} />
-              </View>
-
-              {isCurrentPeriodSelected ? (
-                <View className="size-10 sm:size-9" />
-              ) : (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  accessibilityLabel="Período siguiente"
-                  onPress={() => setDay((current) => shiftPeriod(current, period, 1))}>
-                  <Icon as={ChevronRightIcon} className="size-5" />
-                </Button>
-              )}
-            </View>
-
-            <PeriodTabs period={period} onPeriodChange={setPeriod} />
-
             <Card className="items-center py-6">
               {isPending ? (
                 <View className="h-[210px] justify-center">
@@ -292,12 +253,14 @@ export default function HomeScreen() {
             <View className="items-center gap-3 px-6 py-12">
               <Icon as={InboxIcon} className="text-muted-foreground size-10" />
               <Text className="text-muted-foreground text-center">
-                Sin movimientos registrados en este período.
+                Aún no hay movimientos registrados.
               </Text>
             </View>
           )
         }
       />
+
+      <GoToTodayButton visible={showTop} onPress={scrollToTop} bottom={insets.bottom + 40} />
 
       <Animated.View
         className="absolute right-5"
@@ -307,7 +270,7 @@ export default function HomeScreen() {
           size="icon"
           className="size-16 rounded-full shadow-lg shadow-black/25"
           accessibilityLabel="Agregar nuevo gasto"
-          onPress={() => quickAddRef.current?.present(day)}>
+          onPress={() => quickAddRef.current?.present(todayKey())}>
           <Icon as={PlusIcon} className="size-7" />
         </Button>
       </Animated.View>

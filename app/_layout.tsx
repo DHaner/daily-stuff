@@ -64,6 +64,8 @@ function RootLayoutNav() {
                 <Stack.Screen name="categories" options={{ title: 'Categorías' }} />
                 <Stack.Screen name="journal/[date]" options={{ title: 'Entrada del diario' }} />
                 <Stack.Screen name="journal/labels" options={{ title: 'Etiquetas' }} />
+                <Stack.Screen name="task/[id]" options={{ title: 'Tarea' }} />
+                <Stack.Screen name="task/list" options={{ title: 'Lista' }} />
               </Stack>
               <PortalHost />
             </BottomSheetModalProvider>

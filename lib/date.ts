@@ -139,3 +139,18 @@ export function formatDayCompact(day: DayKey) {
 
   return `${capitalize(weekday)}. ${dayNumber} ${capitalize(month)}, ${year}`;
 }
+
+/** `yyyy-MM` — the month a `DayKey` belongs to. */
+export type MonthKey = string;
+
+export function toMonthKey(day: DayKey): MonthKey {
+  return day.slice(0, 7);
+}
+
+/** e.g. "Octubre, 2026". */
+export function formatMonthLabel(month: MonthKey) {
+  return capitalize(format(fromDayKey(`${month}-01`), 'MMMM, yyyy', { locale: es }));
+}
+
+/** Range that spans every stored record, for screens that show the full history. */
+export const ALL_TIME: DateRange = { start: '0000-01-01', end: '9999-12-31' };

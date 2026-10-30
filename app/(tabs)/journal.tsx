@@ -1,26 +1,17 @@
 import { EntryCard } from '@/components/journal/entry-card';
+import { GoToTodayButton } from '@/components/go-to-today-button';
+import { MonthNav } from '@/components/month-nav';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { useJournalEntriesByRange, useJournalLabels } from '@/hooks/use-journal';
-import {
-  formatPeriodLabel,
-  getPeriodRange,
-  isCurrentPeriod,
-  shiftPeriod,
-  todayKey,
-} from '@/lib/date';
+import { useMonthScroll } from '@/hooks/use-month-scroll';
+import { ALL_TIME, todayKey } from '@/lib/date';
 import type { JournalEntry } from '@/lib/schemas/journal';
 import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
-import {
-  BookHeartIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  PlusIcon,
-  TagsIcon,
-} from 'lucide-react-native';
+import { BookHeartIcon, PlusIcon, TagsIcon } from 'lucide-react-native';
 import * as React from 'react';
 import { ActivityIndicator, RefreshControl, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -28,12 +19,23 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 export default function JournalScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const [month, setMonth] = React.useState(todayKey);
 
-  const range = React.useMemo(() => getPeriodRange(month, 'mes'), [month]);
-  const entriesQuery = useJournalEntriesByRange(range.start, range.end);
+  const entriesQuery = useJournalEntriesByRange(ALL_TIME.start, ALL_TIME.end);
   const labelsQuery = useJournalLabels();
-  const isCurrentMonth = isCurrentPeriod(month, 'mes');
+  const entries = entriesQuery.data ?? [];
+  // One entry per day, and each card is titled with its day, so cards double as day separators.
+  const {
+    listRef,
+    month,
+    months,
+    goToMonth,
+    showTop,
+    onScroll,
+    scrollToTop,
+    onViewableItemsChanged,
+    viewabilityConfig,
+  } =
+    useMonthScroll(entries);
 
   const labelsById = React.useMemo(
     () => new Map((labelsQuery.data ?? []).map((label) => [label.id, label])),
@@ -60,6 +62,8 @@ export default function JournalScreen() {
     <View className="bg-background flex-1">
       <Stack.Screen
         options={{
+          headerTitleAlign: 'center',
+          headerTitle: () => <MonthNav months={months} value={month} onChange={goToMonth} />,
           headerRight: () => (
             <View className="flex-row items-center">
               <Button
@@ -77,10 +81,15 @@ export default function JournalScreen() {
       />
 
       <FlashList
-        data={entriesQuery.data ?? []}
+        ref={listRef}
+        data={entries}
         keyExtractor={(entry) => entry.id}
         renderItem={renderItem}
         extraData={labelsById}
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        onViewableItemsChanged={onViewableItemsChanged}
+        viewabilityConfig={viewabilityConfig}
         contentContainerStyle={{
           paddingHorizontal: 16,
           paddingTop: 16,
@@ -93,34 +102,6 @@ export default function JournalScreen() {
             onRefresh={() => entriesQuery.refetch()}
           />
         }
-        ListHeaderComponent={
-          <View className="mb-4 w-full flex-row items-center justify-between gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              accessibilityLabel="Mes anterior"
-              onPress={() => setMonth((current) => shiftPeriod(current, 'mes', -1))}>
-              <Icon as={ChevronLeftIcon} className="size-5" />
-            </Button>
-
-            <Text className="flex-1 text-center text-base font-semibold">
-              {formatPeriodLabel(month, 'mes')}
-            </Text>
-
-            {/* Keep the slot so the title stays centered when there is no next month to visit. */}
-            {isCurrentMonth ? (
-              <View className="size-10 sm:size-9" />
-            ) : (
-              <Button
-                variant="outline"
-                size="icon"
-                accessibilityLabel="Mes siguiente"
-                onPress={() => setMonth((current) => shiftPeriod(current, 'mes', 1))}>
-                <Icon as={ChevronRightIcon} className="size-5" />
-              </Button>
-            )}
-          </View>
-        }
         ListEmptyComponent={
           entriesQuery.isPending ? (
             <View className="items-center py-12">
@@ -130,12 +111,14 @@ export default function JournalScreen() {
             <View className="items-center gap-3 px-6 py-12">
               <Icon as={BookHeartIcon} className="text-muted-foreground size-10" />
               <Text className="text-muted-foreground text-center">
-                Sin entradas del diario en este mes.
+                Aún no hay entradas del diario.
               </Text>
             </View>
           )
         }
       />
+
+      <GoToTodayButton visible={showTop} onPress={scrollToTop} bottom={insets.bottom + 40} />
 
       <View className="absolute right-5" style={{ bottom: insets.bottom + 24 }}>
         <Button

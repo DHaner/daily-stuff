@@ -18,4 +18,7 @@ export const queryKeys = {
     ['journal', 'entries', 'range', start, end] as const,
   journalEntry: (date: DayKey) => ['journal', 'entries', 'day', date] as const,
   daysWithJournalEntries: ['journal', 'days'] as const,
+  todos: ['todos'] as const,
+  todoLists: ['todos', 'lists'] as const,
+  todoTasks: ['todos', 'tasks'] as const,
 };

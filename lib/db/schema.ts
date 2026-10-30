@@ -2,7 +2,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 
 export const DATABASE_NAME = 'finanzas.db';
 
-const DATABASE_VERSION = 5;
+const DATABASE_VERSION = 6;
 
 /**
  * Runs on `SQLiteProvider.onInit`. Migrations are keyed on SQLite's `user_version`
@@ -192,6 +192,38 @@ export async function migrateDbIfNeeded(db: SQLiteDatabase) {
     }
 
     currentVersion = 5;
+  }
+
+  if (currentVersion === 5) {
+    await db.execAsync(`
+      CREATE TABLE IF NOT EXISTS todo_lists (
+        id TEXT PRIMARY KEY NOT NULL,
+        name TEXT NOT NULL,
+        icon TEXT NOT NULL,
+        color TEXT NOT NULL,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE TABLE IF NOT EXISTS todo_tasks (
+        id TEXT PRIMARY KEY NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT NOT NULL DEFAULT '',
+        list_id TEXT,
+        due_date TEXT,
+        reminder_at TEXT,
+        notification_id TEXT,
+        file_uri TEXT,
+        file_name TEXT,
+        completed INTEGER NOT NULL DEFAULT 0,
+        favorite INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL
+      );
+
+      CREATE INDEX IF NOT EXISTS idx_todo_tasks_due_date ON todo_tasks (due_date);
+      CREATE INDEX IF NOT EXISTS idx_todo_tasks_list_id ON todo_tasks (list_id);
+    `);
+
+    currentVersion = 6;
   }
 
   await db.execAsync(`PRAGMA user_version = ${currentVersion}`);

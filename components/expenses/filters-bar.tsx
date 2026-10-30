@@ -11,48 +11,16 @@ import {
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { getCategory, useCategories } from '@/lib/categories';
-import type { Period } from '@/lib/date';
 import type { CategoryFilter, TypeFilter } from '@/lib/transactions';
 import { cn } from '@/lib/utils';
 import { ArrowDownCircleIcon, ArrowUpCircleIcon, LayersIcon, TagIcon } from 'lucide-react-native';
-import { ScrollView, View } from 'react-native';
-
-const PERIOD_OPTIONS: { value: Period; label: string }[] = [
-  { value: 'dia', label: 'Día' },
-  { value: 'semana', label: 'Semana' },
-  { value: 'mes', label: 'Mes' },
-  { value: 'anio', label: 'Año' },
-];
+import { View } from 'react-native';
 
 const TYPE_OPTIONS: { value: TypeFilter; label: string }[] = [
   { value: 'todos', label: 'Todos' },
   { value: 'gasto', label: 'Gastos' },
   { value: 'ingreso', label: 'Ingresos' },
 ];
-
-type PeriodTabsProps = {
-  period: Period;
-  onPeriodChange: (period: Period) => void;
-};
-
-export function PeriodTabs({ period, onPeriodChange }: PeriodTabsProps) {
-  return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2">
-      {PERIOD_OPTIONS.map((option) => (
-        <Button
-          key={option.value}
-          variant={period === option.value ? 'default' : 'outline'}
-          size="sm"
-          onPress={() => onPeriodChange(option.value)}>
-          <Text
-            className={cn('text-sm', period === option.value ? 'text-primary-foreground' : undefined)}>
-            {option.label}
-          </Text>
-        </Button>
-      ))}
-    </ScrollView>
-  );
-}
 
 type TypeCategoryFiltersProps = {
   type: TypeFilter;

@@ -14,11 +14,14 @@ Pantallas:
 
 | Ruta | Archivo | Qué hace |
 | --- | --- | --- |
-| `/` | `app/(tabs)/index.tsx` | Tab "Finanzas": botón de fecha (abre calendario), doughnut por categoría, lista de gastos del día, FAB para agregar |
+| `/` | `app/(tabs)/index.tsx` | Tab "Finanzas": historial completo agrupado por día, doughnut del mes visible, FAB para agregar |
 | `/expense/new` | `app/expense/new.tsx` | Modal (`presentation: 'modal'`) para crear un gasto |
 | `/expense/[id]` | `app/expense/[id].tsx` | Detalle del gasto; el icono de lápiz cambia a modo edición |
 | `/journal` | `app/(tabs)/journal.tsx` | Tab "Diario": lista de entradas (una por día) filtrada por mes, con FAB para escribir la de hoy |
 | `/journal/[date]` | `app/journal/[date].tsx` | Crea/edita la entrada de un día: ánimo (good/normal/meh/bad/awful), nota, 1 foto y etiquetas |
+| `/tasks` | `app/(tabs)/tasks.tsx` | Tab "Tareas" (to-do): vistas Mi día (por fecha de vencimiento) / Importantes / Todas / una por lista, alta rápida abajo; datos en `lib/db/todos.ts` + `hooks/use-todos.ts` (migración v6) |
+| `/task/[id]` | `app/task/[id].tsx` | Edita una tarea: nombre, descripción, lista, vencimiento, recordatorio (notificación local vía `lib/todo-notifications.ts`) y archivo (`lib/todo-files.ts`) |
+| `/task/list` | `app/task/list.tsx` | Crea/edita/elimina una lista (nombre + icono + color); al borrarla sus tareas quedan sin lista |
 | `/categories` | `app/categories.tsx` | Crea, edita y elimina categorías de gastos/ingresos (nombre + icono + color) |
 | `/journal/labels` | `app/journal/labels.tsx` | Crea, edita (tocando una) y elimina etiquetas (nombre + icono + color; la migración v4 siembra 5 por defecto); el icono se elige en `components/journal/icon-picker.tsx` |
 
@@ -94,6 +97,8 @@ lib/                  categories, breakdown, date, format, storage, theme, query
 ```
 
 ## Convenciones
+
+**Filtro de fechas (Finanzas, Diario y Tareas).** Los tres muestran el historial completo, del más reciente al más antiguo. El header lleva `components/month-nav.tsx` (`< Mes, Año >`, siempre visible; el label abre un selector de meses con scroll y degradados) y `hooks/use-month-scroll.ts` sincroniza ese mes con lo que se ve al hacer scroll y salta al primer registro del mes elegido. Finanzas y Tareas insertan un encabezado por día con `lib/day-groups.ts`; cada tarjeta del Diario ya es un día.
 
 **Fechas.** El día es siempre un `DayKey` (`yyyy-MM-dd`), en SQLite, en las query keys y en
 la UI. Usa los helpers de `lib/date.ts`; no formatees fechas a mano.
