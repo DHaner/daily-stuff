@@ -1,25 +1,88 @@
+import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { cn } from '@/lib/utils';
+import type { LucideIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
+/** Strips the box styling from `Input` / `Textarea` so a field reads as a plain row. */
+export const PLAIN_INPUT = 'h-11 rounded-none border-0 bg-transparent px-0 dark:bg-transparent';
+
 type FormFieldProps = {
+  /** Accessibility label for the icon. */
   label: string;
+  /** Small text above the content. */
+  caption?: string;
+  /** Omit for fields that stand on their own (e.g. the concept title). */
+  icon?: LucideIcon;
+  iconClassName?: string;
+  /** Drops the hairline under the row (last field before the buttons). */
+  last?: boolean;
+  /** Pins the icon to the top for multi-line content (description, category chips). */
+  alignTop?: boolean;
+  /** Makes the whole row pressable, with a ripple edge to edge between the hairlines. */
+  onPress?: () => void;
   hint?: string;
   error?: string;
   className?: string;
   children: React.ReactNode;
 };
 
-export function FormField({ hint, error, className, children }: FormFieldProps) {
-  return (
-    <View className={cn('gap-1.5', className)}>
-      {hint ? (
-        <View className="flex-row items-center justify-end">
-          <Text className="text-muted-foreground text-xs">{hint}</Text>
+/**
+ * A borderless row: representative icon on the left, content on the right, hairline below.
+ * The row bleeds out of the screen padding (`-mx-4`) so hairlines and ripples reach both edges.
+ */
+export function FormField({
+  label,
+  caption,
+  icon,
+  iconClassName,
+  last,
+  alignTop,
+  onPress,
+  hint,
+  error,
+  className,
+  children,
+}: FormFieldProps) {
+  const rowClassName = 'flex-row items-start gap-3 px-4 py-1.5';
+  const content = (
+    <>
+      {icon ? (
+        // Sits on the value's first line, not centred against the caption above it.
+        <View
+          className={cn(
+            'items-center justify-center',
+            alignTop ? 'h-6' : 'h-11',
+            caption && 'mt-4'
+          )}>
+          <Icon
+            as={icon}
+            className={cn('text-muted-foreground size-5', iconClassName)}
+            accessibilityLabel={label}
+          />
         </View>
       ) : null}
-      {children}
-      {error ? <Text className="text-destructive text-xs">{error}</Text> : null}
+      <View className="flex-1">
+        {caption ? <Text className="text-muted-foreground text-xs">{caption}</Text> : null}
+        {children}
+      </View>
+      {hint ? <Text className="text-muted-foreground text-xs">{hint}</Text> : null}
+    </>
+  );
+
+  return (
+    <View className={cn('-mx-4', !last && 'border-border/60 border-b', className)}>
+      {onPress ? (
+        <RipplePressable onPress={onPress} accessibilityRole="button" className={rowClassName}>
+          {content}
+        </RipplePressable>
+      ) : (
+        <View className={rowClassName}>{content}</View>
+      )}
+      {error ? (
+        <Text className={cn('text-destructive px-4 pb-2 text-xs', icon && 'pl-12')}>{error}</Text>
+      ) : null}
     </View>
   );
 }

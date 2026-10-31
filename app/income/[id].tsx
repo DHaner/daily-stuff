@@ -2,11 +2,18 @@ import { IncomeForm, IncomeFormHandle, toFormValues } from '@/components/expense
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import { useDaysWithIncomes, useDeleteIncome, useIncome, useUpdateIncome } from '@/hooks/use-incomes';
+import { useDeleteIncome, useIncome, useUpdateIncome } from '@/hooks/use-incomes';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { CircleAlertIcon, Trash2Icon } from 'lucide-react-native';
+import { CircleAlertIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from 'react-native';
 
 export default function IncomeDetailScreen() {
   const router = useRouter();
@@ -14,7 +21,6 @@ export default function IncomeDetailScreen() {
   const formRef = React.useRef<IncomeFormHandle>(null);
 
   const incomeQuery = useIncome(id);
-  const daysQuery = useDaysWithIncomes();
   const updateIncome = useUpdateIncome(id);
   const deleteIncome = useDeleteIncome();
 
@@ -36,20 +42,10 @@ export default function IncomeDetailScreen() {
       <View className="flex-row items-center">
         <Button
           variant="ghost"
-          size="icon"
-          className="rounded-full"
-          accessibilityLabel="Eliminar ingreso"
-          onPress={confirmDelete}>
-          <Icon as={Trash2Icon} className="text-destructive size-5" />
-        </Button>
-        <Button
-          variant="ghost"
           accessibilityLabel="Guardar cambios"
           disabled={updateIncome.isPending}
           onPress={() => formRef.current?.submit()}>
-          <Text className="font-semibold">
-            {updateIncome.isPending ? 'Guardando…' : 'Guardar'}
-          </Text>
+          <Text className="font-semibold">{updateIncome.isPending ? 'Guardando…' : 'Guardar'}</Text>
         </Button>
       </View>
     ),
@@ -85,7 +81,7 @@ export default function IncomeDetailScreen() {
     <KeyboardAvoidingView
       className="bg-background flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ title: income.concept, headerRight }} />
+      <Stack.Screen options={{ title: '', headerRight }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled">
@@ -94,7 +90,7 @@ export default function IncomeDetailScreen() {
           defaultValues={toFormValues(income)}
           submitLabel="Guardar cambios"
           isSubmitting={updateIncome.isPending}
-          markedDays={daysQuery.data ?? []}
+          onDelete={confirmDelete}
           onSubmit={(values) => updateIncome.mutate(values)}
           footer={
             updateIncome.isError ? (

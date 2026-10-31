@@ -6,13 +6,12 @@ import { Text } from '@/components/ui/text';
 import { getCategory, useCategories } from '@/lib/categories';
 import { formatCurrency } from '@/lib/format';
 import type { Expense } from '@/lib/schemas/expense';
-import { ChevronRightIcon, LayersIcon } from 'lucide-react-native';
+import { ChevronRightIcon } from 'lucide-react-native';
 import { View } from 'react-native';
 
 export function ExpenseCard({ expense, onPress }: { expense: Expense; onPress: () => void }) {
   useCategories();
   const category = getCategory(expense.categoryId);
-  const itemCount = expense.items.length;
 
   return (
     <RipplePressable onPress={onPress} accessibilityRole="button" className="rounded-xl">
@@ -43,14 +42,6 @@ export function ExpenseCard({ expense, onPress }: { expense: Expense; onPress: (
 
         <View className="flex-row items-center gap-2 px-5">
           <CategoryBadge categoryId={expense.categoryId} />
-          {itemCount > 0 ? (
-            <View className="bg-muted flex-row items-center gap-1.5 rounded-full px-2.5 py-1">
-              <Icon as={LayersIcon} className="text-muted-foreground size-3.5" />
-              <Text className="text-muted-foreground text-xs font-medium">
-                {itemCount === 1 ? '1 sub-gasto' : `${itemCount} sub-gastos`}
-              </Text>
-            </View>
-          ) : null}
         </View>
       </Card>
     </RipplePressable>

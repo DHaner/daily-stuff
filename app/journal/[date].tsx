@@ -7,7 +7,6 @@ import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  useDaysWithJournalEntries,
   useDeleteJournalEntry,
   useJournalEntry,
   useJournalLabels,
@@ -36,7 +35,6 @@ export default function JournalEntryScreen() {
 
   const entryQuery = useJournalEntry(day);
   const labelsQuery = useJournalLabels();
-  const daysQuery = useDaysWithJournalEntries();
   const saveEntry = useSaveJournalEntry();
   const deleteEntry = useDeleteJournalEntry();
 
@@ -141,7 +139,7 @@ export default function JournalEntryScreen() {
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}
         keyboardShouldPersistTaps="handled">
-        <DatePicker value={day} onChange={setDay} markedDays={daysQuery.data ?? []} />
+        <DatePicker value={day} onChange={setDay} />
 
         <View className="gap-2">
           <Text className="text-sm font-semibold">¿Cómo te sentiste hoy?</Text>

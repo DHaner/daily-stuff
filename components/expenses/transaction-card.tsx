@@ -18,15 +18,12 @@ export function TransactionCard({
 }) {
   useCategories();
   const category = getCategory(transaction.categoryId);
-  const itemCount = transaction.items.length;
   const isIncome = transaction.kind === 'ingreso';
 
   const subtitle =
-    itemCount > 0
-      ? `${category.label} · ${itemCount === 1 ? '1 sub-ítem' : `${itemCount} sub-ítems`}`
-      : transaction.description.length > 0
-        ? `${category.label} · ${transaction.description}`
-        : category.label;
+    transaction.description.length > 0
+      ? `${category.label} · ${transaction.description}`
+      : category.label;
 
   return (
     <RipplePressable
@@ -34,8 +31,7 @@ export function TransactionCard({
       disabled={!onPress}
       accessibilityRole="button"
       className="rounded-xl">
-      <Card
-        className="flex-row items-center gap-3 px-4 py-3">
+      <Card className="flex-row items-center gap-3 px-4 py-3">
         <View
           className="size-11 items-center justify-center rounded-full"
           style={{ backgroundColor: `${category.color}22` }}>
@@ -56,9 +52,7 @@ export function TransactionCard({
             numberOfLines={1}>
             {isIncome ? '+' : '-'}
           </Text>
-          <Text
-            className='text-base font-semibold'
-            numberOfLines={1}>
+          <Text className="text-base font-semibold" numberOfLines={1}>
             {formatCurrency(transaction.total)}
           </Text>
         </View>

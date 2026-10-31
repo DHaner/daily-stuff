@@ -85,17 +85,10 @@ export async function deleteCategory(db: SQLiteDatabase, id: string): Promise<vo
   if (!category) return;
 
   const fallbackId = getDefaultCategoryId(category.kind);
-  const tables =
-    category.kind === 'gasto' ? ['expenses', 'expense_items'] : ['incomes', 'income_items'];
+  const table = category.kind === 'gasto' ? 'expenses' : 'incomes';
 
   await db.withTransactionAsync(async () => {
-    for (const table of tables) {
-      await db.runAsync(
-        `UPDATE ${table} SET category_id = ? WHERE category_id = ?`,
-        fallbackId,
-        id
-      );
-    }
+    await db.runAsync(`UPDATE ${table} SET category_id = ? WHERE category_id = ?`, fallbackId, id);
 
     await db.runAsync('DELETE FROM categories WHERE id = ?', id);
   });

@@ -1,18 +1,15 @@
 import { CategoryPicker } from '@/components/expenses/category-picker';
-import { DatePicker } from '@/components/expenses/date-picker';
-import { FormField } from '@/components/expenses/form-field';
+import { DateField } from '@/components/expenses/date-picker';
+import { FormField, PLAIN_INPUT } from '@/components/expenses/form-field';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
 import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
+import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
 import { DEFAULT_CATEGORY } from '@/lib/categories';
 import { todayKey, type DayKey } from '@/lib/date';
 import {
   formatAmountInput,
-  formatCurrency,
   parseAmountInput,
   sanitizeAmountInput,
   toAmountInput,
@@ -24,14 +21,11 @@ import {
   type ExpenseFormValues,
 } from '@/lib/schemas/expense';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { LayersIcon, PlusIcon, Trash2Icon } from 'lucide-react-native';
+import { AlignLeftIcon, CalendarIcon, ArrowDownCircleIcon, Trash2Icon } from 'lucide-react-native';
 import * as React from 'react';
-import { Controller, useFieldArray, useForm, useWatch } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
+import { cn } from '@/lib/utils';
 import { View } from 'react-native';
-
-function createItemId() {
-  return `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-}
 
 export function toFormValues(expense: Expense): ExpenseFormInput {
   return {
@@ -40,13 +34,6 @@ export function toFormValues(expense: Expense): ExpenseFormInput {
     description: expense.description,
     categoryId: expense.categoryId,
     date: expense.date,
-    items: expense.items.map((item) => ({
-      id: item.id,
-      concept: item.concept,
-      amount: toAmountInput(item.amount),
-      description: item.description,
-      categoryId: item.categoryId,
-    })),
   };
 }
 
@@ -57,7 +44,6 @@ export function emptyFormValues(date: DayKey = todayKey()): ExpenseFormInput {
     description: '',
     categoryId: DEFAULT_CATEGORY,
     date,
-    items: [],
   };
 }
 
@@ -66,7 +52,8 @@ type ExpenseFormProps = {
   submitLabel: string;
   isSubmitting?: boolean;
   onSubmit: (values: ExpenseFormValues) => void;
-  markedDays?: DayKey[];
+  /** When set (editing), shows a delete button under the save button. */
+  onDelete?: () => void;
   footer?: React.ReactNode;
 };
 
@@ -77,7 +64,7 @@ export type ExpenseFormHandle = {
 
 export const ExpenseForm = React.forwardRef<ExpenseFormHandle, ExpenseFormProps>(
   function ExpenseForm(
-    { defaultValues, submitLabel, isSubmitting = false, onSubmit, markedDays, footer },
+    { defaultValues, submitLabel, isSubmitting = false, onSubmit, onDelete, footer },
     ref
   ) {
     const form = useForm<ExpenseFormInput, unknown, ExpenseFormValues>({
@@ -86,227 +73,120 @@ export const ExpenseForm = React.forwardRef<ExpenseFormHandle, ExpenseFormProps>
       mode: 'onTouched',
     });
 
-    const { control, handleSubmit, setValue, formState } = form;
-    const { fields, append, remove } = useFieldArray({ control, name: 'items' });
+    const { control, handleSubmit, formState } = form;
 
     React.useImperativeHandle(ref, () => ({
       submit: () => handleSubmit(onSubmit)(),
     }));
 
-  const items = useWatch({ control, name: 'items' });
-  const isComposed = fields.length > 0;
+    return (
+      <View className="gap-1">
+        <Controller
+          control={control}
+          name="concept"
+          render={({ field }) => (
+            <FormField label="Concepto" error={formState.errors.concept?.message}>
+              <Input
+                placeholder="Concepto"
+                className={cn(PLAIN_INPUT, 'h-14 text-2xl leading-8 font-bold')}
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+                autoCapitalize="sentences"
+              />
+            </FormField>
+          )}
+        />
 
-  const itemsTotal = React.useMemo(
-    () => (items ?? []).reduce((sum, item) => sum + parseAmountInput(item?.amount ?? ''), 0),
-    [items]
-  );
+        <Controller
+          control={control}
+          name="total"
+          render={({ field }) => (
+            <FormField
+              label="Gasto total"
+              caption="Cantidad"
+              icon={ArrowDownCircleIcon}
+              iconClassName="text-destructive"
+              error={formState.errors.total?.message}>
+              <View className="flex-row items-center gap-1">
+                <Text className="text-muted-foreground text-lg font-semibold">$</Text>
+                <Input
+                  className={cn(PLAIN_INPUT, 'flex-1 text-lg font-semibold')}
+                  placeholder="0.00"
+                  keyboardType="decimal-pad"
+                  value={formatAmountInput(field.value)}
+                  onChangeText={(text) => field.onChange(sanitizeAmountInput(text))}
+                  onBlur={() => {
+                    field.onBlur();
+                    if (field.value) {
+                      field.onChange(toAmountInput(parseAmountInput(field.value)));
+                    }
+                  }}
+                />
+              </View>
+            </FormField>
+          )}
+        />
 
-  // A composed expense is worth exactly the sum of its parts, so the total becomes read-only.
-  React.useEffect(() => {
-    if (isComposed) {
-      setValue('total', itemsTotal.toFixed(2), { shouldValidate: true });
-    }
-  }, [isComposed, itemsTotal, setValue]);
+        <Controller
+          control={control}
+          name="description"
+          render={({ field }) => (
+            <FormField
+              label="Descripción"
+              caption="Descripción"
+              icon={AlignLeftIcon}
+              alignTop
+              error={formState.errors.description?.message}>
+              <Textarea
+                className={cn(PLAIN_INPUT, 'h-auto min-h-12 py-0')}
+                placeholder="Notas, método de pago, etc."
+                value={field.value}
+                onChangeText={field.onChange}
+                onBlur={field.onBlur}
+              />
+            </FormField>
+          )}
+        />
 
-  function addItem() {
-    append({
-      id: createItemId(),
-      concept: '',
-      amount: '',
-      description: '',
-      categoryId: DEFAULT_CATEGORY,
-    });
-  }
-
-  return (
-    <View className="gap-5">
-      <Controller
-        control={control}
-        name="date"
-        render={({ field }) => (
-          <FormField label="Fecha" error={formState.errors.date?.message}>
-            <DatePicker value={field.value} onChange={field.onChange} markedDays={markedDays} />
-          </FormField>
-        )}
-      />
-
-      <Controller
-        control={control}
-        name="concept"
-        render={({ field }) => (
-          <FormField label="Concepto" error={formState.errors.concept?.message}>
-            <Input
-              placeholder="Compra en Amazon"
+        <Controller
+          control={control}
+          name="date"
+          render={({ field }) => (
+            <DateField
+              label="Fecha de creación"
+              caption="Fecha de creación"
+              icon={CalendarIcon}
               value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-              autoCapitalize="sentences"
+              onChange={field.onChange}
+              error={formState.errors.date?.message}
             />
-          </FormField>
-        )}
-      />
+          )}
+        />
 
-      <Controller
-        control={control}
-        name="total"
-        render={({ field }) => (
-          <FormField
-            label="Gasto total"
-            hint={isComposed ? 'Suma de los sub-gastos' : undefined}
-            error={formState.errors.total?.message}>
-            <Input
-              placeholder="$0.00"
-              keyboardType="decimal-pad"
-              value={formatAmountInput(field.value)}
-              onChangeText={(text) => field.onChange(sanitizeAmountInput(text))}
-              onBlur={() => {
-                field.onBlur();
-                if (field.value) {
-                  field.onChange(toAmountInput(parseAmountInput(field.value)));
-                }
-              }}
-              editable={!isComposed}
-              className={isComposed ? 'opacity-70' : undefined}
-            />
-          </FormField>
-        )}
-      />
-      
-      <Controller
-        control={control}
-        name="description"
-        render={({ field }) => (
-          <FormField label="Descripción" error={formState.errors.description?.message}>
-            <Textarea
-              placeholder="Notas, método de pago, etc."
-              value={field.value}
-              onChangeText={field.onChange}
-              onBlur={field.onBlur}
-            />
-          </FormField>
-        )}
-      />
+        <Controller
+          control={control}
+          name="categoryId"
+          render={({ field }) => (
+            <FormField label="Categoría" last error={formState.errors.categoryId?.message}>
+              <CategoryPicker value={field.value} onChange={field.onChange} />
+            </FormField>
+          )}
+        />
 
-      <Controller
-        control={control}
-        name="categoryId"
-        render={({ field }) => (
-          <FormField label="Categoría" error={formState.errors.categoryId?.message}>
-            <CategoryPicker value={field.value} onChange={field.onChange} />
-          </FormField>
-        )}
-      />
-
-
-
-      <Separator />
-
-      <View className="gap-3">
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-center gap-2">
-            <Icon as={LayersIcon} className="text-muted-foreground size-4" />
-            <Text className="font-semibold">Sub-gastos</Text>
-          </View>
-          <Text className="text-muted-foreground text-xs">
-            {isComposed ? formatCurrency(itemsTotal) : 'Opcional'}
-          </Text>
-        </View>
-
-        <Text className="text-muted-foreground text-xs">
-          Desglosa un gasto compuesto — por ejemplo, los 3 productos de un pedido de Amazon.
-        </Text>
-
-        {fields.map((fieldItem, index) => (
-          <Card key={fieldItem.id} className="gap-4 py-4">
-            <View className="flex-row items-center justify-between px-4">
-              <Text className="text-muted-foreground text-xs font-semibold uppercase">
-                Sub-gasto {index + 1}
-              </Text>
-              <Button
-                variant="ghost"
-                size="icon"
-                onPress={() => remove(index)}
-                accessibilityLabel={'Eliminar sub-gasto ' + (index + 1)}>
-                <Icon as={Trash2Icon} className="text-destructive size-4" />
-              </Button>
-            </View>
-
-            <View className="gap-4 px-4">
-              <Controller
-                control={control}
-                name={`items.${index}.concept`}
-                render={({ field }) => (
-                  <FormField
-                    label="Concepto"
-                    error={formState.errors.items?.[index]?.concept?.message}>
-                    <Input
-                      placeholder="Teclado mecánico"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                    />
-                  </FormField>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name={`items.${index}.amount`}
-                render={({ field }) => (
-                  <FormField label="Gasto" error={formState.errors.items?.[index]?.amount?.message}>
-                    <Input
-                      placeholder="0.00"
-                      keyboardType="decimal-pad"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                    />
-                  </FormField>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name={`items.${index}.categoryId`}
-                render={({ field }) => (
-                  <FormField label="Categoría">
-                    <CategoryPicker value={field.value} onChange={field.onChange} />
-                  </FormField>
-                )}
-              />
-
-              <Controller
-                control={control}
-                name={`items.${index}.description`}
-                render={({ field }) => (
-                  <FormField label="Descripción">
-                    <Textarea
-                      placeholder="Detalle del producto"
-                      value={field.value}
-                      onChangeText={field.onChange}
-                      onBlur={field.onBlur}
-                    />
-                  </FormField>
-                )}
-              />
-            </View>
-          </Card>
-        ))}
-
-        <Button variant="outline" onPress={addItem}>
-          <Icon as={PlusIcon} className="size-4" />
-          <Text>Agregar sub-gasto</Text>
+        <Button size="lg" className="mt-4" onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
+          <Text>{isSubmitting ? 'Guardando…' : submitLabel}</Text>
         </Button>
+
+        {onDelete ? (
+          <Button variant="ghost" size="lg" onPress={onDelete} disabled={isSubmitting}>
+            <Icon as={Trash2Icon} className="text-destructive size-5" />
+            <Text className="text-destructive">Eliminar gasto</Text>
+          </Button>
+        ) : null}
+
+        {footer}
       </View>
-
-      <Separator />
-
-      <Button size="lg" onPress={handleSubmit(onSubmit)} disabled={isSubmitting}>
-        <Text>{isSubmitting ? 'Guardando…' : submitLabel}</Text>
-      </Button>
-
-      {footer}
-    </View>
     );
   }
 );

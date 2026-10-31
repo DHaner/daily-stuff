@@ -2,16 +2,18 @@ import { ExpenseForm, ExpenseFormHandle, toFormValues } from '@/components/expen
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { Text } from '@/components/ui/text';
-import {
-  useDaysWithExpenses,
-  useDeleteExpense,
-  useExpense,
-  useUpdateExpense,
-} from '@/hooks/use-expenses';
+import { useDeleteExpense, useExpense, useUpdateExpense } from '@/hooks/use-expenses';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
-import { CircleAlertIcon, Trash2Icon } from 'lucide-react-native';
+import { CircleAlertIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  View,
+} from 'react-native';
 
 export default function ExpenseDetailScreen() {
   const router = useRouter();
@@ -19,7 +21,6 @@ export default function ExpenseDetailScreen() {
   const formRef = React.useRef<ExpenseFormHandle>(null);
 
   const expenseQuery = useExpense(id);
-  const daysQuery = useDaysWithExpenses();
   const updateExpense = useUpdateExpense(id);
   const deleteExpense = useDeleteExpense();
 
@@ -39,14 +40,6 @@ export default function ExpenseDetailScreen() {
   const headerRight = React.useCallback(
     () => (
       <View className="flex-row items-center">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full"
-          accessibilityLabel="Eliminar gasto"
-          onPress={confirmDelete}>
-          <Icon as={Trash2Icon} className="text-destructive size-5" />
-        </Button>
         <Button
           variant="ghost"
           accessibilityLabel="Guardar cambios"
@@ -90,7 +83,7 @@ export default function ExpenseDetailScreen() {
     <KeyboardAvoidingView
       className="bg-background flex-1"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <Stack.Screen options={{ title: expense.concept, headerRight }} />
+      <Stack.Screen options={{ title: '', headerRight }} />
       <ScrollView
         contentContainerStyle={{ padding: 16, paddingBottom: 48 }}
         keyboardShouldPersistTaps="handled">
@@ -99,7 +92,7 @@ export default function ExpenseDetailScreen() {
           defaultValues={toFormValues(expense)}
           submitLabel="Guardar cambios"
           isSubmitting={updateExpense.isPending}
-          markedDays={daysQuery.data ?? []}
+          onDelete={confirmDelete}
           onSubmit={(values) => updateExpense.mutate(values)}
           footer={
             updateExpense.isError ? (

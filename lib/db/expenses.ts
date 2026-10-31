@@ -12,21 +12,11 @@ type ExpenseRow = {
   updated_at: string;
 };
 
-type ExpenseItemRow = {
-  id: string;
-  expense_id: string;
-  concept: string;
-  amount: number;
-  description: string;
-  category_id: string;
-  position: number;
-};
-
 function createId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 }
 
-function toExpense(row: ExpenseRow, itemRows: ExpenseItemRow[]): Expense {
+function toExpense(row: ExpenseRow): Expense {
   return expenseSchema.parse({
     id: row.id,
     concept: row.concept,
@@ -36,21 +26,7 @@ function toExpense(row: ExpenseRow, itemRows: ExpenseItemRow[]): Expense {
     date: row.date,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    items: itemRows.map((item) => ({
-      id: item.id,
-      concept: item.concept,
-      amount: item.amount,
-      description: item.description,
-      categoryId: item.category_id,
-    })),
   });
-}
-
-function groupItemsByExpense(rows: ExpenseItemRow[]) {
-  return rows.reduce<Record<string, ExpenseItemRow[]>>((acc, row) => {
-    (acc[row.expense_id] ??= []).push(row);
-    return acc;
-  }, {});
 }
 
 export async function listExpensesByDate(db: SQLiteDatabase, date: string): Promise<Expense[]> {
@@ -59,18 +35,7 @@ export async function listExpensesByDate(db: SQLiteDatabase, date: string): Prom
     date
   );
 
-  if (rows.length === 0) {
-    return [];
-  }
-
-  const placeholders = rows.map(() => '?').join(', ');
-  const itemRows = await db.getAllAsync<ExpenseItemRow>(
-    `SELECT * FROM expense_items WHERE expense_id IN (${placeholders}) ORDER BY position ASC`,
-    ...rows.map((row) => row.id)
-  );
-  const itemsByExpense = groupItemsByExpense(itemRows);
-
-  return rows.map((row) => toExpense(row, itemsByExpense[row.id] ?? []));
+  return rows.map(toExpense);
 }
 
 export async function listExpensesByDateRange(
@@ -84,18 +49,7 @@ export async function listExpensesByDateRange(
     end
   );
 
-  if (rows.length === 0) {
-    return [];
-  }
-
-  const placeholders = rows.map(() => '?').join(', ');
-  const itemRows = await db.getAllAsync<ExpenseItemRow>(
-    `SELECT * FROM expense_items WHERE expense_id IN (${placeholders}) ORDER BY position ASC`,
-    ...rows.map((row) => row.id)
-  );
-  const itemsByExpense = groupItemsByExpense(itemRows);
-
-  return rows.map((row) => toExpense(row, itemsByExpense[row.id] ?? []));
+  return rows.map(toExpense);
 }
 
 export async function listExpensesByCategory(
@@ -107,18 +61,7 @@ export async function listExpensesByCategory(
     categoryId
   );
 
-  if (rows.length === 0) {
-    return [];
-  }
-
-  const placeholders = rows.map(() => '?').join(', ');
-  const itemRows = await db.getAllAsync<ExpenseItemRow>(
-    `SELECT * FROM expense_items WHERE expense_id IN (${placeholders}) ORDER BY position ASC`,
-    ...rows.map((row) => row.id)
-  );
-  const itemsByExpense = groupItemsByExpense(itemRows);
-
-  return rows.map((row) => toExpense(row, itemsByExpense[row.id] ?? []));
+  return rows.map(toExpense);
 }
 
 export async function getExpenseById(db: SQLiteDatabase, id: string): Promise<Expense | null> {
@@ -128,30 +71,7 @@ export async function getExpenseById(db: SQLiteDatabase, id: string): Promise<Ex
     return null;
   }
 
-  const itemRows = await db.getAllAsync<ExpenseItemRow>(
-    'SELECT * FROM expense_items WHERE expense_id = ? ORDER BY position ASC',
-    id
-  );
-
-  return toExpense(row, itemRows);
-}
-
-async function replaceItems(db: SQLiteDatabase, expenseId: string, values: ExpenseFormValues) {
-  await db.runAsync('DELETE FROM expense_items WHERE expense_id = ?', expenseId);
-
-  for (const [index, item] of values.items.entries()) {
-    await db.runAsync(
-      `INSERT INTO expense_items (id, expense_id, concept, amount, description, category_id, position)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      item.id || createId(),
-      expenseId,
-      item.concept,
-      item.amount,
-      item.description,
-      item.categoryId,
-      index
-    );
-  }
+  return toExpense(row);
 }
 
 export async function createExpense(
@@ -174,7 +94,6 @@ export async function createExpense(
       now,
       now
     );
-    await replaceItems(db, id, values);
   });
 
   const created = await getExpenseById(db, id);
@@ -206,7 +125,6 @@ export async function updateExpense(
       now,
       id
     );
-    await replaceItems(db, id, values);
   });
 
   const updated = await getExpenseById(db, id);
@@ -220,7 +138,6 @@ export async function updateExpense(
 
 export async function deleteExpense(db: SQLiteDatabase, id: string): Promise<void> {
   await db.withTransactionAsync(async () => {
-    await db.runAsync('DELETE FROM expense_items WHERE expense_id = ?', id);
     await db.runAsync('DELETE FROM expenses WHERE id = ?', id);
   });
 }

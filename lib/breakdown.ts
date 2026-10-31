@@ -1,5 +1,5 @@
 import { getCategory, type CategoryId } from '@/lib/categories';
-import type { Expense, ExpenseItem } from '@/lib/schemas/expense';
+import type { Expense } from '@/lib/schemas/expense';
 import type { Transaction } from '@/lib/transactions';
 
 export type CategorySlice = {
@@ -9,10 +9,6 @@ export type CategorySlice = {
   amount: number;
   percentage: number;
 };
-
-export function sumItems(items: Pick<ExpenseItem, 'amount'>[]) {
-  return items.reduce((total, item) => total + (Number.isFinite(item.amount) ? item.amount : 0), 0);
-}
 
 export function sumExpenses(expenses: Pick<Expense, 'total'>[]) {
   return expenses.reduce(
@@ -68,10 +64,6 @@ export function getTypeBreakdown(transactions: Transaction[]): CategorySlice[] {
 
 /**
  * Splits a day's spending into category slices for the doughnut chart.
- *
- * A composed expense (e.g. one Amazon order with three products) is broken down by
- * its items' own categories; whatever the items don't cover — shipping, taxes,
- * rounding — falls back to the parent expense's category.
  */
 export function getCategoryBreakdown(expenses: (Expense | Transaction)[]): CategorySlice[] {
   const totals = new Map<CategoryId, number>();
@@ -85,16 +77,7 @@ export function getCategoryBreakdown(expenses: (Expense | Transaction)[]): Categ
   }
 
   for (const expense of expenses) {
-    if (expense.items.length === 0) {
-      add(expense.categoryId, expense.total);
-      continue;
-    }
-
-    for (const item of expense.items) {
-      add(item.categoryId, item.amount);
-    }
-
-    add(expense.categoryId, expense.total - sumItems(expense.items));
+    add(expense.categoryId, expense.total);
   }
 
   const grandTotal = [...totals.values()].reduce((sum, amount) => sum + amount, 0);
