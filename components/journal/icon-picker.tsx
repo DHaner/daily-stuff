@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import {
@@ -13,7 +14,7 @@ import { cn } from '@/lib/utils';
 import { FlashList } from '@shopify/flash-list';
 import { SearchXIcon, XIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { Modal, Pressable, ScrollView, View } from 'react-native';
+import { Modal, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 const COLUMNS = 5;
@@ -62,20 +63,20 @@ export function IconPicker({ visible, value, onSelect, onClose }: IconPickerProp
 
       return (
         <View className="items-center p-1">
-          <Pressable
+          <RipplePressable
             onPress={() => onSelect(item.name)}
             accessibilityRole="button"
             accessibilityLabel={item.name}
             accessibilityState={{ selected: isSelected }}
             className={cn(
-              'size-14 items-center justify-center rounded-lg border active:opacity-70',
+              'size-14 items-center justify-center rounded-lg border',
               isSelected ? 'bg-primary border-transparent' : 'border-border bg-card'
             )}>
             <Icon
               as={getLabelIcon(item.name)}
               className={cn('size-6', isSelected ? 'text-primary-foreground' : 'text-foreground')}
             />
-          </Pressable>
+          </RipplePressable>
         </View>
       );
     },
@@ -119,7 +120,7 @@ export function IconPicker({ visible, value, onSelect, onClose }: IconPickerProp
                 const isActive = !isSearching && chip.id === categoryId;
 
                 return (
-                  <Pressable
+                  <RipplePressable
                     key={chip.id}
                     onPress={() => {
                       setQuery('');
@@ -128,7 +129,7 @@ export function IconPicker({ visible, value, onSelect, onClose }: IconPickerProp
                     accessibilityRole="button"
                     accessibilityState={{ selected: isActive }}
                     className={cn(
-                      'rounded-full border px-3 py-1.5 active:opacity-80',
+                      'rounded-full border px-3 py-1.5',
                       isActive ? 'bg-primary border-transparent' : 'border-border bg-card'
                     )}>
                     <Text
@@ -138,7 +139,7 @@ export function IconPicker({ visible, value, onSelect, onClose }: IconPickerProp
                       )}>
                       {chip.label}
                     </Text>
-                  </Pressable>
+                  </RipplePressable>
                 );
               })}
             </ScrollView>

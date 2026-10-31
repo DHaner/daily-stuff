@@ -2,6 +2,7 @@ import { DatePicker } from '@/components/expenses/date-picker';
 import { LabelChip } from '@/components/journal/label-chip';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
@@ -27,7 +28,7 @@ import {
   XIcon,
 } from 'lucide-react-native';
 import * as React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
 const REMINDER_TIMES = ['08:00', '09:00', '12:00', '18:00', '20:00'];
 const DEFAULT_REMINDER_TIME = '09:00';
@@ -171,12 +172,12 @@ export default function TaskScreen() {
           <View className="gap-2">
             <Text className="text-sm font-semibold">Lista</Text>
             <View className="flex-row flex-wrap gap-2">
-              <Pressable
+              <RipplePressable
                 onPress={() => setListId(null)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: listId === null }}
                 className={cn(
-                  'rounded-full border px-3 py-1.5 active:opacity-80',
+                  'rounded-full border px-3 py-1.5',
                   listId === null ? 'bg-primary border-transparent' : 'border-border bg-card'
                 )}>
                 <Text
@@ -186,7 +187,7 @@ export default function TaskScreen() {
                   )}>
                   Sin lista
                 </Text>
-              </Pressable>
+              </RipplePressable>
               {lists.map((list) => (
                 <LabelChip
                   key={list.id}
@@ -247,13 +248,13 @@ export default function TaskScreen() {
                   const isActive = reminder.time === time;
 
                   return (
-                    <Pressable
+                    <RipplePressable
                       key={time}
                       onPress={() => setReminder({ ...reminder, time })}
                       accessibilityRole="button"
                       accessibilityState={{ selected: isActive }}
                       className={cn(
-                        'rounded-full border px-3 py-1.5 active:opacity-80',
+                        'rounded-full border px-3 py-1.5',
                         isActive ? 'bg-primary border-transparent' : 'border-border bg-card'
                       )}>
                       <Text
@@ -263,7 +264,7 @@ export default function TaskScreen() {
                         )}>
                         {time}
                       </Text>
-                    </Pressable>
+                    </RipplePressable>
                   );
                 })}
               </View>
@@ -285,16 +286,16 @@ export default function TaskScreen() {
           <Text className="text-sm font-semibold">Archivo</Text>
           {file ? (
             <View className="flex-row items-center gap-2">
-              <Pressable
+              <RipplePressable
                 onPress={openFile}
                 accessibilityRole="button"
                 accessibilityLabel={`Abrir ${file.name}`}
-                className="border-border bg-card flex-1 flex-row items-center gap-2 rounded-md border px-3 py-2.5 active:opacity-70">
+                className="border-border bg-card flex-1 flex-row items-center gap-2 rounded-md border px-3 py-2.5">
                 <Icon as={PaperclipIcon} className="text-muted-foreground size-5" />
                 <Text className="flex-1" numberOfLines={1}>
                   {file.name}
                 </Text>
-              </Pressable>
+              </RipplePressable>
               <Button
                 size="icon"
                 variant="outline"

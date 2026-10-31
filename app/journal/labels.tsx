@@ -1,8 +1,8 @@
 import { ColorPicker } from '@/components/journal/color-picker';
 import { IconPicker } from '@/components/journal/icon-picker';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import {
@@ -17,7 +17,7 @@ import { journalLabelFormSchema, type JournalLabel } from '@/lib/schemas/journal
 import { FlashList } from '@shopify/flash-list';
 import { CheckIcon, PlusIcon, TagsIcon, Trash2Icon, XIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 
 export default function JournalLabelsScreen() {
   const labelsQuery = useJournalLabels();
@@ -98,13 +98,13 @@ export default function JournalLabelsScreen() {
             </Text>
 
             <View className="flex-row items-center gap-2">
-              <Pressable
+              <RipplePressable
                 onPress={() => setPickerOpen(true)}
                 accessibilityRole="button"
                 accessibilityLabel="Elegir icono"
-                className="border-input bg-card size-10 items-center justify-center rounded-md border active:opacity-70">
+                className="border-input bg-card size-10 items-center justify-center rounded-md border">
                 <Icon as={getLabelIcon(icon)} className="size-5" color={color} />
-              </Pressable>
+              </RipplePressable>
 
               <View className="flex-1">
                 <Input
@@ -146,14 +146,13 @@ export default function JournalLabelsScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <Card
-            className="flex-row items-center gap-3 py-2 pr-2 pl-4"
+          <RipplePressable
+            onPress={() => startEditing(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`Editar etiqueta ${item.name}`}
+            className="bg-card border-border flex-row items-center gap-3 rounded-xl border py-2 pr-2 pl-4"
             style={item.id === editingId ? { borderColor: item.color } : undefined}>
-            <Pressable
-              onPress={() => startEditing(item)}
-              accessibilityRole="button"
-              accessibilityLabel={`Editar etiqueta ${item.name}`}
-              className="flex-1 flex-row items-center gap-3 py-1 active:opacity-70">
+            <View className="flex-1 flex-row items-center gap-3 py-1">
               <View
                 className="size-9 items-center justify-center rounded-full"
                 style={{ backgroundColor: `${item.color}26` }}>
@@ -162,7 +161,7 @@ export default function JournalLabelsScreen() {
               <Text className="flex-1 text-base" numberOfLines={1}>
                 {item.name}
               </Text>
-            </Pressable>
+            </View>
             <Button
               variant="ghost"
               size="icon"
@@ -171,7 +170,7 @@ export default function JournalLabelsScreen() {
               onPress={() => confirmDelete(item)}>
               <Icon as={Trash2Icon} className="text-destructive size-5" />
             </Button>
-          </Card>
+          </RipplePressable>
         )}
         ListEmptyComponent={
           labelsQuery.isPending ? null : (

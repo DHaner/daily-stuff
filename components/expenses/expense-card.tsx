@@ -1,12 +1,13 @@
 import { CategoryBadge } from '@/components/expenses/category-badge';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { getCategory, useCategories } from '@/lib/categories';
 import { formatCurrency } from '@/lib/format';
 import type { Expense } from '@/lib/schemas/expense';
 import { ChevronRightIcon, LayersIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 export function ExpenseCard({ expense, onPress }: { expense: Expense; onPress: () => void }) {
   useCategories();
@@ -14,7 +15,7 @@ export function ExpenseCard({ expense, onPress }: { expense: Expense; onPress: (
   const itemCount = expense.items.length;
 
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" className="active:opacity-70">
+    <RipplePressable onPress={onPress} accessibilityRole="button" className="rounded-xl">
       <Card className="gap-3 overflow-hidden py-4">
         {/* Category colour rail */}
         <View
@@ -52,6 +53,6 @@ export function ExpenseCard({ expense, onPress }: { expense: Expense; onPress: (
           ) : null}
         </View>
       </Card>
-    </Pressable>
+    </RipplePressable>
   );
 }

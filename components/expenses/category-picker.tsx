@@ -1,8 +1,9 @@
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { getCategory, useCategories, type Category, type CategoryId } from '@/lib/categories';
 import { cn } from '@/lib/utils';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 type CategoryPickerProps = {
   value: string;
@@ -29,13 +30,13 @@ export function CategoryPicker({
         const isSelected = category.id === selected.id;
 
         return (
-          <Pressable
+          <RipplePressable
             key={category.id}
             onPress={() => onChange(category.id)}
             accessibilityRole="button"
             accessibilityState={{ selected: isSelected }}
             className={cn(
-              'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 active:opacity-80',
+              'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5',
               isSelected ? 'border-transparent' : 'border-border bg-card'
             )}
             style={isSelected ? { backgroundColor: category.color } : undefined}>
@@ -49,7 +50,7 @@ export function CategoryPicker({
               style={isSelected ? { color: '#ffffff' } : undefined}>
               {category.label}
             </Text>
-          </Pressable>
+          </RipplePressable>
         );
       })}
     </View>

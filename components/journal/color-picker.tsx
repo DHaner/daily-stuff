@@ -1,6 +1,7 @@
 import { ColorSlider } from '@/components/journal/color-slider';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { hexToHsv, hsvToHex, type Hsv } from '@/lib/color';
@@ -58,32 +59,32 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           const isSelected = color === value.toLowerCase();
 
           return (
-            <Pressable
+            <RipplePressable
               key={color}
               onPress={() => onChange(color)}
               accessibilityRole="button"
               accessibilityLabel={`Color ${color}`}
               accessibilityState={{ selected: isSelected }}
               className={cn(
-                'size-9 items-center justify-center rounded-full active:opacity-70',
+                'size-9 items-center justify-center rounded-full',
                 isSelected && 'border-foreground border-2'
               )}
               style={{ backgroundColor: color }}>
               {isSelected ? <Icon as={CheckIcon} className="size-4" color="#ffffff" /> : null}
-            </Pressable>
+            </RipplePressable>
           );
         })}
       </View>
 
       <View className="flex-row items-center gap-3">
-        <Pressable
+        <RipplePressable
           onPress={() => setEditorOpen(true)}
           accessibilityRole="button"
           accessibilityLabel="Abrir editor de color"
-          className="border-border size-10 items-center justify-center rounded-md border active:opacity-70"
+          className="border-border size-10 items-center justify-center rounded-md border"
           style={{ backgroundColor: isHexColor(value) ? value : undefined }}>
           <Icon as={PipetteIcon} className="size-4" color="#ffffff" />
-        </Pressable>
+        </RipplePressable>
         <View className="flex-1">
           <Input
             value={hexText}

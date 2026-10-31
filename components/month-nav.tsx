@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { formatMonthLabel, type MonthKey } from '@/lib/date';
 import { PALETTE } from '@/lib/theme';
@@ -44,13 +45,13 @@ export function MonthNav({ months, value, onChange }: MonthNavProps) {
         <Icon as={ChevronLeftIcon} className="size-5" />
       </Button>
 
-      <Pressable
+      <RipplePressable
         onPress={() => setOpen(true)}
         accessibilityRole="button"
         accessibilityLabel="Elegir mes"
-        className="px-1 py-2 active:opacity-70">
+        className="px-1 py-2 rounded-md">
         <Text className="text-base font-semibold">{formatMonthLabel(value)}</Text>
-      </Pressable>
+      </RipplePressable>
 
       <Button
         variant="ghost"
@@ -112,13 +113,13 @@ function MonthPicker({ visible, months, value, onSelect, onClose }: MonthPickerP
                 const isSelected = item === value;
 
                 return (
-                  <Pressable
+                  <RipplePressable
                     onPress={() => onSelect(item)}
                     accessibilityRole="button"
                     accessibilityState={{ selected: isSelected }}
                     style={{ height: ITEM_HEIGHT }}
                     className={cn(
-                      'mx-3 items-center justify-center rounded-lg active:opacity-70',
+                      'mx-3 items-center justify-center rounded-lg',
                       isSelected && 'bg-primary'
                     )}>
                     <Text
@@ -128,7 +129,7 @@ function MonthPicker({ visible, months, value, onSelect, onClose }: MonthPickerP
                       )}>
                       {formatMonthLabel(item)}
                     </Text>
-                  </Pressable>
+                  </RipplePressable>
                 );
               }}
             />

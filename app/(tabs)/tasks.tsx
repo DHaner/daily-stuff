@@ -4,6 +4,7 @@ import { MonthNav } from '@/components/month-nav';
 import { TaskRow } from '@/components/todos/task-row';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -23,7 +24,7 @@ import { FlashList } from '@shopify/flash-list';
 import { Stack, useRouter } from 'expo-router';
 import { ListChecksIcon, PencilIcon, PlusIcon, StarIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
 /** `todas` and `importantes` are built in; anything else is a list id. */
 type TaskView = 'todas' | 'importantes' | (string & {});
@@ -161,13 +162,13 @@ export default function TasksScreen() {
             const isActive = effectiveView === item.id;
 
             return (
-              <Pressable
+              <RipplePressable
                 key={item.id}
                 onPress={() => setView(item.id)}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isActive }}
                 className={cn(
-                  'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5 active:opacity-80',
+                  'flex-row items-center gap-1.5 rounded-full border px-3 py-1.5',
                   isActive ? 'bg-primary border-transparent' : 'border-border bg-card'
                 )}>
                 <Icon
@@ -184,7 +185,7 @@ export default function TasksScreen() {
                   )}>
                   {item.label}
                 </Text>
-              </Pressable>
+              </RipplePressable>
             );
           })}
 

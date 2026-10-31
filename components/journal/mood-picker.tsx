@@ -1,8 +1,9 @@
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { MOOD_LIST, type MoodId } from '@/lib/journal-moods';
 import { cn } from '@/lib/utils';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 type MoodPickerProps = {
   value: MoodId | null;
@@ -17,14 +18,14 @@ export function MoodPicker({ value, onChange }: MoodPickerProps) {
         const isSelected = mood.id === value;
 
         return (
-          <Pressable
+          <RipplePressable
             key={mood.id}
             onPress={() => onChange(mood.id)}
             accessibilityRole="button"
             accessibilityLabel={mood.label}
             accessibilityState={{ selected: isSelected }}
             className={cn(
-              'flex-1 items-center gap-1 rounded-lg border py-3 active:opacity-80',
+              'flex-1 items-center gap-1 rounded-lg border py-3',
               isSelected ? 'border-transparent' : 'border-border bg-card'
             )}
             style={
@@ -38,7 +39,7 @@ export function MoodPicker({ value, onChange }: MoodPickerProps) {
               numberOfLines={1}>
               {mood.label}
             </Text>
-          </Pressable>
+          </RipplePressable>
         );
       })}
     </View>

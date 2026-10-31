@@ -79,6 +79,15 @@ export const NAV_THEME: Record<'light' | 'dark', Theme> = {
     },
   },
 };
+
+/** Android ripple tints (`android_ripple.color` takes no Tailwind classes). */
+export const RIPPLE = {
+  light: 'rgba(0, 0, 0, 0.06)',
+  dark: 'rgba(255, 255, 255, 0.16)',
+  /** For solid coloured surfaces (primary / destructive buttons). */
+  onSolid: 'rgba(255, 255, 255, 0.28)',
+} as const;
+
 /**
  * Hex mirror of the theme, for third-party views that cannot read Tailwind classes
  * (react-native-calendars, react-native-chart-kit).

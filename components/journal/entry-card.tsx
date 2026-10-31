@@ -1,13 +1,14 @@
 import { LabelChip } from '@/components/journal/label-chip';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { formatDayLabel } from '@/lib/date';
 import { getMood } from '@/lib/journal-moods';
 import type { JournalEntry, JournalLabel } from '@/lib/schemas/journal';
 import { Image } from 'expo-image';
 import { ChevronRightIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 type EntryCardProps = {
   entry: JournalEntry;
@@ -20,7 +21,7 @@ export function EntryCard({ entry, labels, onPress }: EntryCardProps) {
   const mood = getMood(entry.mood);
 
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" className="active:opacity-70">
+    <RipplePressable onPress={onPress} accessibilityRole="button" className="rounded-xl">
       <Card className="gap-3 px-4 py-3">
         <View className="flex-row items-center gap-3">
           <View
@@ -63,6 +64,6 @@ export function EntryCard({ entry, labels, onPress }: EntryCardProps) {
           </View>
         ) : null}
       </Card>
-    </Pressable>
+    </RipplePressable>
   );
 }

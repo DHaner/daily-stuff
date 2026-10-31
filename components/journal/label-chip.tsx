@@ -1,9 +1,10 @@
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { getLabelIcon } from '@/lib/journal-icons';
 import type { JournalLabel } from '@/lib/schemas/journal';
 import { cn } from '@/lib/utils';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 type LabelChipProps = {
   label: JournalLabel;
@@ -40,13 +41,13 @@ export function LabelChip({ label, selected = false, onPress }: LabelChipProps) 
   }
 
   return (
-    <Pressable
+    <RipplePressable
       onPress={onPress}
       accessibilityRole="button"
       accessibilityState={{ selected }}
-      className={cn(className, 'active:opacity-80')}
+      className={className}
       style={style}>
       {content}
-    </Pressable>
+    </RipplePressable>
   );
 }

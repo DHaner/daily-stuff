@@ -1,8 +1,8 @@
 import { ColorPicker } from '@/components/journal/color-picker';
 import { IconPicker } from '@/components/journal/icon-picker';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import { useCreateCategory, useDeleteCategory, useUpdateCategory } from '@/hooks/use-categories';
@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 import { FlashList } from '@shopify/flash-list';
 import { CheckIcon, PlusIcon, Trash2Icon, XIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, View } from 'react-native';
 import { z } from 'zod';
 
 const KIND_OPTIONS: { value: CategoryKind; label: string }[] = [
@@ -140,13 +140,13 @@ export default function CategoriesScreen() {
               </Text>
 
               <View className="flex-row items-center gap-2">
-                <Pressable
+                <RipplePressable
                   onPress={() => setPickerOpen(true)}
                   accessibilityRole="button"
                   accessibilityLabel="Elegir icono"
-                  className="border-input bg-card size-10 items-center justify-center rounded-md border active:opacity-70">
+                  className="border-input bg-card size-10 items-center justify-center rounded-md border">
                   <Icon as={getLabelIcon(iconName)} className="size-5" color={color} />
-                </Pressable>
+                </RipplePressable>
 
                 <View className="flex-1">
                   <Input
@@ -189,14 +189,13 @@ export default function CategoriesScreen() {
           </View>
         }
         renderItem={({ item }) => (
-          <Card
-            className="flex-row items-center gap-3 py-2 pr-2 pl-4"
+          <RipplePressable
+            onPress={() => startEditing(item)}
+            accessibilityRole="button"
+            accessibilityLabel={`Editar categoría ${item.label}`}
+            className="bg-card border-border flex-row items-center gap-3 rounded-xl border py-2 pr-2 pl-4"
             style={item.id === editingId ? { borderColor: item.color } : undefined}>
-            <Pressable
-              onPress={() => startEditing(item)}
-              accessibilityRole="button"
-              accessibilityLabel={`Editar categoría ${item.label}`}
-              className="flex-1 flex-row items-center gap-3 py-1 active:opacity-70">
+            <View className="flex-1 flex-row items-center gap-3 py-1">
               <View
                 className="size-9 items-center justify-center rounded-full"
                 style={{ backgroundColor: `${item.color}26` }}>
@@ -205,7 +204,7 @@ export default function CategoriesScreen() {
               <Text className="flex-1 text-base" numberOfLines={1}>
                 {item.label}
               </Text>
-            </Pressable>
+            </View>
 
             {/* "Otros" is where deleted categories fall back to, so it can only be edited. */}
             {isDefaultCategory(item.id) ? (
@@ -220,7 +219,7 @@ export default function CategoriesScreen() {
                 <Icon as={Trash2Icon} className="text-destructive size-5" />
               </Button>
             )}
-          </Card>
+          </RipplePressable>
         )}
       />
 

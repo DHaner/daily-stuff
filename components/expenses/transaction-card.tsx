@@ -1,12 +1,13 @@
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { getCategory, useCategories } from '@/lib/categories';
 import { formatCurrency } from '@/lib/format';
 import type { CategoryTotal, Transaction } from '@/lib/transactions';
 import { cn } from '@/lib/utils';
 import { ChevronRightIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 export function TransactionCard({
   transaction,
@@ -28,11 +29,11 @@ export function TransactionCard({
         : category.label;
 
   return (
-    <Pressable
+    <RipplePressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
-      className="active:opacity-70">
+      className="rounded-xl">
       <Card
         className="flex-row items-center gap-3 px-4 py-3">
         <View
@@ -64,7 +65,7 @@ export function TransactionCard({
 
         {onPress ? <Icon as={ChevronRightIcon} className="text-muted-foreground size-4" /> : null}
       </Card>
-    </Pressable>
+    </RipplePressable>
   );
 }
 
@@ -81,11 +82,11 @@ export function CategorySummaryCard({
   const isIncome = categoryTotal.kind === 'ingreso';
 
   return (
-    <Pressable
+    <RipplePressable
       onPress={onPress}
       disabled={!onPress}
       accessibilityRole="button"
-      className="active:opacity-70">
+      className="rounded-xl">
       <Card
         className="flex-row items-center gap-3 px-4 py-3"
         style={{ borderLeftWidth: 4, borderLeftColor: category.color }}>
@@ -117,6 +118,6 @@ export function CategorySummaryCard({
 
         {onPress ? <Icon as={ChevronRightIcon} className="text-muted-foreground size-4" /> : null}
       </Card>
-    </Pressable>
+    </RipplePressable>
   );
 }

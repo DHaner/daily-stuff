@@ -2,6 +2,7 @@ import { ColorPicker } from '@/components/journal/color-picker';
 import { IconPicker } from '@/components/journal/icon-picker';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Input } from '@/components/ui/input';
 import { Text } from '@/components/ui/text';
 import {
@@ -16,7 +17,7 @@ import { todoListFormSchema } from '@/lib/schemas/todo';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { Trash2Icon } from 'lucide-react-native';
 import * as React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
 const DEFAULT_LIST_ICON = 'List';
 
@@ -101,13 +102,13 @@ export default function TodoListScreen() {
         contentContainerStyle={{ padding: 16, paddingBottom: 48, gap: 20 }}
         keyboardShouldPersistTaps="handled">
         <View className="flex-row items-center gap-2">
-          <Pressable
+          <RipplePressable
             onPress={() => setPickerOpen(true)}
             accessibilityRole="button"
             accessibilityLabel="Elegir icono"
-            className="border-input bg-card size-10 items-center justify-center rounded-md border active:opacity-70">
+            className="border-input bg-card size-10 items-center justify-center rounded-md border">
             <Icon as={getLabelIcon(icon)} className="size-5" color={color} />
-          </Pressable>
+          </RipplePressable>
 
           <View className="flex-1">
             <Input

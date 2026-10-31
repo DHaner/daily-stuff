@@ -1,11 +1,12 @@
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { formatDayShort, todayKey } from '@/lib/date';
 import { getLabelIcon } from '@/lib/journal-icons';
 import type { TodoList, TodoTask } from '@/lib/schemas/todo';
 import { cn } from '@/lib/utils';
 import { BellIcon, CheckIcon, PaperclipIcon, StarIcon } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
 type TaskRowProps = {
   task: TodoTask;
@@ -22,22 +23,25 @@ export function TaskRow({ task, list, onPress, onToggleCompleted, onToggleFavori
   const hasMeta = list || task.dueDate || task.reminderAt || task.fileUri;
 
   return (
-    <View className="bg-card border-border flex-row items-center rounded-xl border pl-1">
-      <Pressable
+    <RipplePressable
+      onPress={onPress}
+      accessibilityRole="button"
+      className="bg-card border-border flex-row items-center rounded-xl border pl-1">
+      <RipplePressable
         onPress={onToggleCompleted}
         hitSlop={4}
         accessibilityRole="checkbox"
         accessibilityState={{ checked: task.completed }}
         accessibilityLabel={task.completed ? 'Marcar como pendiente' : 'Marcar como completada'}
-        className="size-11 items-center justify-center active:opacity-70">
+        className="size-11 items-center justify-center rounded-full">
         <View
           className="size-6 items-center justify-center rounded-full border-2"
           style={{ borderColor: accent, backgroundColor: task.completed ? accent : undefined }}>
           {task.completed ? <Icon as={CheckIcon} className="size-4" color="#ffffff" /> : null}
         </View>
-      </Pressable>
+      </RipplePressable>
 
-      <Pressable onPress={onPress} className="flex-1 gap-0.5 py-3 active:opacity-70">
+      <View className="flex-1 gap-0.5 py-3">
         <Text
           className={cn('text-base', task.completed && 'text-muted-foreground line-through')}
           numberOfLines={2}>
@@ -65,20 +69,20 @@ export function TaskRow({ task, list, onPress, onToggleCompleted, onToggleFavori
             ) : null}
           </View>
         ) : null}
-      </Pressable>
+      </View>
 
-      <Pressable
+      <RipplePressable
         onPress={onToggleFavorite}
         hitSlop={4}
         accessibilityRole="button"
         accessibilityLabel={task.favorite ? 'Quitar de favoritas' : 'Marcar como favorita'}
-        className="size-11 items-center justify-center active:opacity-70">
+        className="size-11 items-center justify-center rounded-full">
         <Icon
           as={StarIcon}
           className={cn('size-5', task.favorite ? 'text-amber-500' : 'text-muted-foreground')}
           fill={task.favorite ? '#f59e0b' : 'none'}
         />
-      </Pressable>
-    </View>
+      </RipplePressable>
+    </RipplePressable>
   );
 }

@@ -3,6 +3,7 @@ import { LabelChip } from '@/components/journal/label-chip';
 import { MoodPicker } from '@/components/journal/mood-picker';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
+import { RipplePressable } from '@/components/ui/ripple-pressable';
 import { Text } from '@/components/ui/text';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -20,7 +21,7 @@ import * as ImagePicker from 'expo-image-picker';
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import { CameraIcon, ImagePlusIcon, SettingsIcon, Trash2Icon, XIcon } from 'lucide-react-native';
 import * as React from 'react';
-import { Alert, KeyboardAvoidingView, Platform, Pressable, ScrollView, View } from 'react-native';
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
 
 const PHOTO_OPTIONS: ImagePicker.ImagePickerOptions = {
   mediaTypes: ['images'],
@@ -177,14 +178,14 @@ export default function JournalEntryScreen() {
                 { label: 'Tomar foto', icon: CameraIcon, onPress: takePhoto },
                 { label: 'Elegir de galería', icon: ImagePlusIcon, onPress: pickFromLibrary },
               ].map((option) => (
-                <Pressable
+                <RipplePressable
                   key={option.label}
                   onPress={option.onPress}
                   accessibilityRole="button"
-                  className="border-border bg-card h-32 flex-1 items-center justify-center gap-2 rounded-lg border border-dashed active:opacity-70">
+                  className="border-border bg-card h-32 flex-1 items-center justify-center gap-2 rounded-lg border border-dashed">
                   <Icon as={option.icon} className="text-muted-foreground size-7" />
                   <Text className="text-muted-foreground text-sm">{option.label}</Text>
-                </Pressable>
+                </RipplePressable>
               ))}
             </View>
           )}
