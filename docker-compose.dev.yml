@@ -1,0 +1,19 @@
+# Local development: only the database, published on localhost for `dotnet run`.
+#   docker compose -f docker-compose.dev.yml up -d
+
+name: daily-stuff-dev
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: dailystuff
+      POSTGRES_USER: dailystuff
+      POSTGRES_PASSWORD: dailystuff
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db-dev-data:/var/lib/postgresql/data
+
+volumes:
+  db-dev-data:
