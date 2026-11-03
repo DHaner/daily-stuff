@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="daily-stuff.client/daily-stuff.client.esproj">
+    <Build />
+    <Deploy />
+  </Project>
+  <Project Path="daily-stuff.Server/daily-stuff.Server.csproj" />
+</Solution>
